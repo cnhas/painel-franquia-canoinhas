@@ -1,0 +1,157 @@
+{
+  "franquia": "Canoinhas / Três Barras",
+  "fonte": "Data Much (Metabase) + Painel Delivery Much",
+  "contexto_mensal": {
+    "mes_referencia": "2026-07",
+    "atualizado_em": "2026-07-16T08:54:57",
+    "gmv_realizado_mes": 226009.95,
+    "gmv_mom_pct": -6.08,
+    "gmv_yoy_pct": -5.14,
+    "media_gmv_dia": 15083.28,
+    "gmv_projetado_mes": 467542,
+    "meta_mes": 484636,
+    "meta_ate_ontem": 234123,
+    "pct_realizado_ate_ontem": 96.53,
+    "gmv_acumulado_ano": 2888132.88,
+    "gmv_ate_ontem_ano": 2836278.01,
+    "gmv_yoy_ano_pct": 1.83,
+    "pedidos_realizado_mes": 3256,
+    "media_pedidos_dia": 217,
+    "pedidos_projetado_mes": 6848,
+    "meta_pedidos_mes": 7445,
+    "meta_pedidos_ate_ontem": 3540,
+    "pct_pedidos_realizado_ate_ontem": 91.98,
+    "pedidos_acumulado_ano": 42966,
+    "pedidos_yoy_ano_pct": -7.31
+  },
+  "gmv_diario_mes": [
+    {"data": "2026-07-01", "gmv": 12246.70, "meta": 15416},
+    {"data": "2026-07-02", "gmv": 13997.08, "meta": 12800},
+    {"data": "2026-07-03", "gmv": 20147.64, "meta": 18909},
+    {"data": "2026-07-04", "gmv": 23591.65, "meta": 21010},
+    {"data": "2026-07-05", "gmv": 15215.33, "meta": 19950},
+    {"data": "2026-07-06", "gmv": 10112.92, "meta": 11889},
+    {"data": "2026-07-07", "gmv": 12164.00, "meta": 12439},
+    {"data": "2026-07-08", "gmv": 13166.17, "meta": 13966},
+    {"data": "2026-07-09", "gmv": 13347.55, "meta": 12794},
+    {"data": "2026-07-10", "gmv": 21991.95, "meta": 20538},
+    {"data": "2026-07-11", "gmv": 23398.64, "meta": 21398},
+    {"data": "2026-07-12", "gmv": 15851.28, "meta": 17696},
+    {"data": "2026-07-13", "gmv": 9387.02, "meta": 10800},
+    {"data": "2026-07-14", "gmv": 9238.53, "meta": 11210},
+    {"data": "2026-07-15", "gmv": 12153.49, "meta": 13306},
+    {"data": "2026-07-16", "gmv": 239.20, "meta": 12910, "parcial": true}
+  ],
+  "comparativo_mes_anterior": {
+    "descricao": "Mesmo dia (15), mês anterior x mês atual",
+    "dia_15_junho": {"gmv": 7985.49, "meta": 10828},
+    "dia_15_julho": {"gmv": 12153.49, "meta": 13306},
+    "variacao_pct": 52.19
+  },
+  "dias": [
+    {
+      "data": "2026-07-15",
+      "gmv_dia": 12153.49,
+      "meta_dia": 13306,
+      "pedidos_cupom": 58,
+      "gmv_cupom": 3808.62,
+      "desconto_total": 368.47,
+      "ticket_medio_cupom": 65.67,
+      "gmv_por_cupom": 10.34,
+      "lojas_unicas_cupom": 34,
+      "painel": {
+        "pedidos_totais": 202,
+        "cancelados": 19,
+        "pct_cancelados": 9.4,
+        "entrega": 161,
+        "retirada": 41,
+        "fonte": "Painel > Histórico (autoritativo)"
+      },
+      "ofertas_de_por": {
+        "itens_vendidos": 67,
+        "gmv_produtos": 3461,
+        "subsidio_franquia": 44.05,
+        "subsidio_loja": 1649,
+        "subsidio_dm": 63,
+        "destaques": ["Combos de pizza + refrigerante", "X-Salada + Coca-Cola Lata", "Combos de burguer (Fredie's, Machado)"]
+      },
+      "top_lojas_gmv": [
+        {"nome": "Top'z Burger", "gmv": 830.78, "pedidos": 12},
+        {"nome": "Garajão do Dog - Jardim Esperança", "gmv": 570.70, "pedidos": 6},
+        {"nome": "Pizzaria Portal", "gmv": 521.50, "pedidos": 5},
+        {"nome": "Garden Hamburgueria e Bistro", "gmv": 391.37, "pedidos": 5},
+        {"nome": "Mietta Café", "gmv": 391.30, "pedidos": 7},
+        {"nome": "Sushi Yume", "gmv": 319.90, "pedidos": 3},
+        {"nome": "Big X-Costela Pioneiro Desde 2016", "gmv": 214.00, "pedidos": 3},
+        {"nome": "MasterPizza Delivery - Campo da Água Verde", "gmv": 167.85, "pedidos": 3},
+        {"nome": "Burger Flex Hamburgueria", "gmv": 160.50, "pedidos": 3},
+        {"nome": "Bom Apetite", "gmv": 146.89, "pedidos": 5}
+      ],
+      "top_lojas_pedidos": [
+        {"nome": "Top'z Burger", "gmv": 830.78, "pedidos": 12},
+        {"nome": "Mietta Café", "gmv": 391.30, "pedidos": 7},
+        {"nome": "Garajão do Dog - Jardim Esperança", "gmv": 570.70, "pedidos": 6},
+        {"nome": "Garden Hamburgueria e Bistro", "gmv": 391.37, "pedidos": 5},
+        {"nome": "Pizzaria Portal", "gmv": 521.50, "pedidos": 5},
+        {"nome": "Bom Apetite", "gmv": 146.89, "pedidos": 5},
+        {"nome": "Sushi Yume", "gmv": 319.90, "pedidos": 3},
+        {"nome": "Big X-Costela Pioneiro Desde 2016", "gmv": 214.00, "pedidos": 3},
+        {"nome": "MasterPizza Delivery - Campo da Água Verde", "gmv": 167.85, "pedidos": 3},
+        {"nome": "Burger Flex Hamburgueria", "gmv": 160.50, "pedidos": 3}
+      ],
+      "cupons_uso": [
+        {"codigo": "PEDEDM", "pedidos": 46},
+        {"codigo": "#MUCH20", "pedidos": 4},
+        {"codigo": "MUCH20", "pedidos": 4},
+        {"codigo": "GOLEIRO", "pedidos": 2},
+        {"codigo": "BIONDI", "pedidos": 2}
+      ],
+      "cupons_categoria": [
+        {"categoria": "Bebidas", "qtd": 52},
+        {"categoria": "Bom e Barato", "qtd": 30},
+        {"categoria": "Ofertas", "qtd": 28},
+        {"categoria": "Combos Coca-Cola", "qtd": 24},
+        {"categoria": "Combão com Desconto", "qtd": 21},
+        {"categoria": "Porções", "qtd": 21}
+      ],
+      "pendencias": [
+        "Ranking de lojas por GMV/pedidos vem da aba 'Geral' do Data Much, que é parcial frente ao Painel (validado: soma de pedidos dessa aba ≈ 85 vs. 202 reais no Painel)",
+        "Lojas cadastradas por campanha ainda não localizado no Data Much — precisa perguntar ao suporte Delivery Much"
+      ]
+    }
+  ],
+  "investimentos": {
+    "periodo": "01/07/2026 a 16/07/2026",
+    "atualizado_em": "2026-07-17",
+    "verificacao_dados_recentes": "Checado em 17/07/2026: Data Much ainda não fechou o dia 16/07 (GMV do dia continua parcial, R$ 239,20) e os relatórios de Cupom/Ofertas não mudaram desde a última coleta. Assim que houver um dia novo completo, entra automaticamente na próxima atualização.",
+    "componentes": [
+      {"nome": "Ofertas De/Por — subsídio franquia", "valor": 1258.89, "obs": "Mês completo (01–31/07); Data Much só tem pedidos até ~16/07"},
+      {"nome": "Cupom — subsídio franquia (direto)", "valor": 286.94, "obs": "01–16/07 · filtro Subsídio = Franquia"},
+      {"nome": "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia", "valor": 730.37, "obs": "50% de R$ 1.460,74 · 01–16/07"},
+      {"nome": "Entrega promocional — subsídio franquia", "valor": 0.00, "obs": "Mês completo · inclui variante 'com pedido mínimo' (ambas zeradas)"}
+    ],
+    "total_confirmado": 2276.20,
+    "pendencias": [
+      "Confirmado com você: não existe subsídio separado de 'entrega grátis' — só entrega promocional entra na conta (removido da fórmula).",
+      "Por loja: só 'entrega promocional' está detalhada por loja até agora (R$0,00 em todas este mês). De/Por e Cupom aparecem só no total do mês — dá pra detalhar por loja numa próxima atualização.",
+      "Por campanha: ainda não localizei uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
+    ]
+  },
+  "ultima_verificacao_dados": "17/07/2026",
+  "data_much_status": {
+    "dashboard_url": "https://datamuch.deliverymuch.com.br/app/report/208",
+    "ultima_atualizacao_conhecida": "16/07/2026 08:54:57",
+    "verificado_em": "17/07/2026 12:01",
+    "novo_dia_detectado": false
+  },
+  "pedidos_ao_vivo_hoje": {
+    "data": "2026-07-17",
+    "checado_em": "11:39",
+    "fonte": "Painel > Histórico, filtro Hoje",
+    "pedidos_totais": 22,
+    "cancelados": 3,
+    "pct_cancelados": 13.6,
+    "gmv_total": 793.54,
+    "gmv_valido": 619.71
+  }
+}

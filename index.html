@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Painel Franquia — Canoinhas &amp; Três Barras</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --dm-red:#c0392b;
+    --dm-red-dark:#8e2a1f;
+    --dm-navy:#1b2a3d;
+    --bg:#f2f3f5;
+    --card:#ffffff;
+    --text:#1b2a3d;
+    --muted:#6b7280;
+    --green:#1e8e3e;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  header{background:var(--dm-navy);color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+  header h1{margin:0 0 4px 0;font-size:21px;}
+  header p{margin:0;color:#b8c2d1;font-size:13px;}
+  header .picker{display:flex;align-items:center;gap:8px;background:#25374f;padding:8px 14px;border-radius:8px;}
+  header .picker label{font-size:12px;color:#b8c2d1;}
+  header select{background:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:13px;font-weight:600;}
+  .wrap{max-width:1140px;margin:0 auto;padding:24px 20px 60px;}
+  h3.section-title{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:34px 0 12px 2px;}
+  h3.section-title:first-child{margin-top:0;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .kpis.five{grid-template-columns:repeat(5,1fr);}
+  .kpi{background:var(--card);border-radius:10px;padding:16px 16px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:4px solid var(--dm-red);}
+  .kpi.navy{border-top-color:var(--dm-navy);}
+  .kpi .value{font-size:22px;font-weight:700;color:var(--dm-navy);}
+  .kpi .label{font-size:12px;color:var(--muted);margin-top:4px;}
+  .kpi .sub{font-size:11.5px;margin-top:6px;font-weight:600;}
+  .sub.good{color:var(--green);}
+  .sub.warn{color:var(--dm-red);}
+  section{background:var(--card);border-radius:10px;padding:22px 24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  section h2{font-size:16px;margin:0 0 16px 0;color:var(--dm-navy);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .toggle{display:flex;background:#f0f1f3;border-radius:8px;padding:3px;font-size:12px;}
+  .toggle button{border:none;background:transparent;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;color:var(--muted);font-family:inherit;}
+  .toggle button.active{background:var(--dm-red);color:#fff;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);padding:8px 10px;border-bottom:2px solid #eee;}
+  td{padding:9px 10px;border-bottom:1px solid #f0f0f0;}
+  tr:last-child td{border-bottom:none;}
+  .rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--dm-red);color:#fff;font-size:11px;font-weight:700;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin:10px 0;}
+  .bar-label{width:150px;font-size:13px;flex-shrink:0;}
+  .bar-track{flex:1;background:#eee;border-radius:6px;height:18px;overflow:hidden;}
+  .bar-fill{background:linear-gradient(90deg,var(--dm-red),var(--dm-red-dark));height:100%;border-radius:6px;}
+  .bar-fill.blue{background:linear-gradient(90deg,#2563eb,#1d4ed8);}
+  .bar-value{width:45px;text-align:right;font-size:13px;font-weight:600;flex-shrink:0;}
+  .grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+  .stat-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f2f2f2;font-size:14px;}
+  .stat-line:last-child{border-bottom:none;}
+  .stat-line b{color:var(--dm-navy);}
+  .note{background:#fff7ed;border:1px solid #fde3c8;border-radius:8px;padding:14px 16px;font-size:13px;color:#7c4a03;line-height:1.5;}
+  .pending{background:#fef2f2;border:1px solid #fbd5d5;border-radius:8px;padding:14px 16px;font-size:13px;color:#8e2a1f;line-height:1.5;}
+  .ask{background:#eef4ff;border:1px solid #cddcfb;border-radius:8px;padding:16px 18px;font-size:13.5px;color:#1b3a6b;line-height:1.6;}
+  .ask b{color:var(--dm-navy);}
+  .tag{display:inline-block;background:#f0f1f3;color:var(--dm-navy);font-size:12px;padding:5px 10px;border-radius:999px;margin:3px 4px 3px 0;font-weight:600;}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 30px;}
+  canvas{max-height:260px;}
+  @media (max-width:820px){.kpis, .kpis.five{grid-template-columns:repeat(2,1fr);}.grid2,.grid3{grid-template-columns:1fr;}}
+
+  #gate{position:fixed;inset:0;background:var(--dm-navy);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;}
+  #gate .card{background:#fff;border-radius:14px;padding:36px 32px;max-width:340px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+  #gate .card h2{margin:0 0 6px 0;color:var(--dm-navy);font-size:18px;}
+  #gate .card p{margin:0 0 20px 0;color:var(--muted);font-size:13px;}
+  #gate input{width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:8px;font-size:16px;text-align:center;letter-spacing:.05em;box-sizing:border-box;}
+  #gate button{width:100%;margin-top:12px;padding:12px 14px;border:none;border-radius:8px;background:var(--dm-red);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  #gate button:hover{background:var(--dm-red-dark);}
+  #gate .err{color:var(--dm-red);font-size:12.5px;margin-top:10px;min-height:16px;font-weight:600;}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="card">
+    <h2>🔒 Painel Franquia</h2>
+    <p>Acesso restrito — Canoinhas &amp; Três Barras</p>
+    <input type="password" id="gateInput" placeholder="Código de acesso" autofocus>
+    <button id="gateBtn">Entrar</button>
+    <div class="err" id="gateErr"></div>
+  </div>
+</div>
+
+<div id="appContent" style="display:none;">
+
+<header>
+  <div>
+    <h1>Painel Franquia — Delivery Much Canoinhas &amp; Três Barras</h1>
+    <p id="genInfo">fonte: Data Much (Metabase) + Painel Delivery Much</p>
+    <p id="checkInfo" style="margin-top:2px;font-size:11.5px;color:#8fa0b8;"></p>
+  </div>
+  <div class="picker">
+    <label for="daySelect">Ver o dia:</label>
+    <select id="daySelect"></select>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <h3 class="section-title">🔴 Pedidos ao vivo — hoje <span id="liveCheckTime" style="text-transform:none;font-weight:600;"></span></h3>
+  <div class="kpis" id="liveKpis"></div>
+  <div class="note" style="margin-top:-6px;margin-bottom:24px;">
+    Puxado direto do Painel &gt; Histórico (filtro "Hoje"), contagem manual a cada pedido de atualização — não é automático. Peça "atualiza pedidos de hoje" a qualquer momento para uma nova checagem.
+  </div>
+
+  <h3 class="section-title">Visão do mês (julho/2026)</h3>
+  <div class="kpis" id="monthKpis"></div>
+
+  <h3 class="section-title">Dia selecionado</h3>
+  <div class="kpis" id="dayKpis"></div>
+
+  <h3 class="section-title">Pedidos do dia (Painel)</h3>
+  <div class="kpis" id="painelKpis"></div>
+
+  <section>
+    <h2>Evolução diária de GMV — mês inteiro</h2>
+    <canvas id="gmvChart"></canvas>
+    <div class="note" style="margin-top:14px;">
+      Já com todos os dias de 01/07 até hoje. A soma bate exatamente com o GMV mensal do Data Much (R$ 226.009,95) — dado validado.
+    </div>
+  </section>
+
+  <section>
+    <h2>📅 Comparativo com o mesmo dia do mês anterior</h2>
+    <div class="grid3" id="momCompare"></div>
+  </section>
+
+  <section>
+    <h2>
+      🏆 Top 10 lojas — dia selecionado
+      <div class="toggle" id="lojaToggle">
+        <button data-mode="gmv" class="active">Por GMV</button>
+        <button data-mode="pedidos">Por pedidos</button>
+      </div>
+    </h2>
+    <table>
+      <thead><tr><th>#</th><th>Loja</th><th>GMV</th><th>Pedidos</th></tr></thead>
+      <tbody id="lojasBody"></tbody>
+    </table>
+    <div class="note" style="margin-top:14px;">
+      Ranking vem da aba "Geral" do painel Acompanhamento de Lojas do Data Much — é parcial (soma ≈ 42% do GMV/pedidos reais do dia, conferido contra o Painel). Serve como ranking relativo entre lojas, não como total absoluto.
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section>
+      <h2>🎟️ Uso de cupons por campanha</h2>
+      <div id="cuponsBars"></div>
+    </section>
+    <section>
+      <h2>📊 Cupons por categoria (uso)</h2>
+      <div id="categoriaLines"></div>
+    </section>
+  </div>
+
+  <section>
+    <h2>🏷️ Ofertas De/Por</h2>
+    <div id="ofertasBox"></div>
+  </section>
+
+  <section>
+    <h2>
+      💰 Investimentos da Franquia
+      <span style="font-size:12px;color:var(--muted);font-weight:600;" id="investPeriodo"></span>
+    </h2>
+    <div class="kpi navy" style="margin-bottom:16px;">
+      <div class="value" id="investTotal"></div>
+      <div class="label">Total investido no mês (componentes confirmados)</div>
+    </div>
+    <table>
+      <thead><tr><th>Componente</th><th>Valor</th><th>Observação</th></tr></thead>
+      <tbody id="investBody"></tbody>
+    </table>
+    <div class="note" style="margin-top:14px;">
+      Fórmula: De/Por (franquia) + Cupom (franquia direto) + 50% do subsídio compartilhado Franqueadora/Franquia em cupom + Entrega promocional (franquia, ambas variantes). Fonte: Data Much — Ofertas De/Por, Acompanhamento de Cupom e Acompanhamento de Operação › Ranking.
+    </div>
+    <div class="pending" style="margin-top:12px;" id="investPending"></div>
+  </section>
+
+  <section>
+    <h2>🤖 Perguntas livres</h2>
+    <div class="ask">
+      Este arquivo é estático — mas você pode me perguntar direto no chat coisas como <b>"quanto a Top'z Burger vendeu essa semana"</b> ou <b>"quais produtos mais vendidos da Pizzaria Portal"</b> que eu consulto o Data Much e te respondo. Deixar isso dentro do próprio arquivo exigiria uma API conectada de verdade.
+    </div>
+  </section>
+
+  <section>
+    <h2>⚠️ Pendências desta rodada</h2>
+    <div class="pending" id="pendingBox"></div>
+  </section>
+
+</div>
+
+<footer>Gerado a partir do Data Much e do Painel Delivery Much · Peça "atualiza o painel" pra somar um novo dia</footer>
+
+</div>
+
+<script>
+const ACCESS_CODE_HASH = "ee9f6fc29676eaa893bbdb9d2359bef164508d20e761996436dba701691a78db";
+
+async function sha256(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function tryUnlock(){
+  const val = document.getElementById('gateInput').value.trim();
+  const hash = await sha256(val);
+  if(hash === ACCESS_CODE_HASH){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+    try{ sessionStorage.setItem('painelFranquiaUnlocked','1'); }catch(e){}
+    boot();
+  } else {
+    document.getElementById('gateErr').textContent = 'Código incorreto. Tente de novo.';
+  }
+}
+document.getElementById('gateBtn').addEventListener('click', tryUnlock);
+document.getElementById('gateInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
+try{
+  if(sessionStorage.getItem('painelFranquiaUnlocked')==='1'){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+  }
+}catch(e){}
+
+const dataStore = {
+  "franquia": "Canoinhas / Três Barras",
+  "fonte": "Data Much (Metabase) + Painel Delivery Much",
+  "ultima_verificacao_dados": "17/07/2026",
+  "data_much_status": {
+    "dashboard_url": "https://datamuch.deliverymuch.com.br/app/report/208",
+    "ultima_atualizacao_conhecida": "16/07/2026 08:54:57",
+    "verificado_em": "17/07/2026 12:01",
+    "novo_dia_detectado": false
+  },
+  "pedidos_ao_vivo_hoje": {
+    "data": "2026-07-17",
+    "checado_em": "11:39",
+    "fonte": "Painel > Histórico, filtro Hoje",
+    "pedidos_totais": 22,
+    "cancelados": 3,
+    "pct_cancelados": 13.6,
+    "gmv_total": 793.54,
+    "gmv_valido": 619.71
+  },
+  "contexto_mensal": {
+    "mes_referencia": "2026-07",
+    "atualizado_em": "2026-07-16T08:54:57",
+    "gmv_realizado_mes": 226009.95,
+    "gmv_mom_pct": -6.08,
+    "gmv_yoy_pct": -5.14,
+    "media_gmv_dia": 15083.28,
+    "gmv_projetado_mes": 467542,
+    "meta_mes": 484636,
+    "meta_ate_ontem": 234123,
+    "pct_realizado_ate_ontem": 96.53,
+    "gmv_acumulado_ano": 2888132.88,
+    "gmv_ate_ontem_ano": 2836278.01,
+    "gmv_yoy_ano_pct": 1.83,
+    "pedidos_realizado_mes": 3256,
+    "media_pedidos_dia": 217,
+    "pedidos_projetado_mes": 6848,
+    "meta_pedidos_mes": 7445,
+    "meta_pedidos_ate_ontem": 3540,
+    "pct_pedidos_realizado_ate_ontem": 91.98,
+    "pedidos_acumulado_ano": 42966,
+    "pedidos_yoy_ano_pct": -7.31
+  },
+  "gmv_diario_mes": [
+    {
+      "data": "2026-07-01",
+      "gmv": 12246.7,
+      "meta": 15416
+    },
+    {
+      "data": "2026-07-02",
+      "gmv": 13997.08,
+      "meta": 12800
+    },
+    {
+      "data": "2026-07-03",
+      "gmv": 20147.64,
+      "meta": 18909
+    },
+    {
+      "data": "2026-07-04",
+      "gmv": 23591.65,
+      "meta": 21010
+    },
+    {
+      "data": "2026-07-05",
+      "gmv": 15215.33,
+      "meta": 19950
+    },
+    {
+      "data": "2026-07-06",
+      "gmv": 10112.92,
+      "meta": 11889
+    },
+    {
+      "data": "2026-07-07",
+      "gmv": 12164.0,
+      "meta": 12439
+    },
+    {
+      "data": "2026-07-08",
+      "gmv": 13166.17,
+      "meta": 13966
+    },
+    {
+      "data": "2026-07-09",
+      "gmv": 13347.55,
+      "meta": 12794
+    },
+    {
+      "data": "2026-07-10",
+      "gmv": 21991.95,
+      "meta": 20538
+    },
+    {
+      "data": "2026-07-11",
+      "gmv": 23398.64,
+      "meta": 21398
+    },
+    {
+      "data": "2026-07-12",
+      "gmv": 15851.28,
+      "meta": 17696
+    },
+    {
+      "data": "2026-07-13",
+      "gmv": 9387.02,
+      "meta": 10800
+    },
+    {
+      "data": "2026-07-14",
+      "gmv": 9238.53,
+      "meta": 11210
+    },
+    {
+      "data": "2026-07-15",
+      "gmv": 12153.49,
+      "meta": 13306
+    },
+    {
+      "data": "2026-07-16",
+      "gmv": 239.2,
+      "meta": 12910,
+      "parcial": true
+    }
+  ],
+  "comparativo_mes_anterior": {
+    "descricao": "Mesmo dia (15), mês anterior x mês atual",
+    "dia_15_junho": {
+      "gmv": 7985.49,
+      "meta": 10828
+    },
+    "dia_15_julho": {
+      "gmv": 12153.49,
+      "meta": 13306
+    },
+    "variacao_pct": 52.19
+  },
+  "dias": [
+    {
+      "data": "2026-07-15",
+      "gmv_dia": 12153.49,
+      "meta_dia": 13306,
+      "pedidos_cupom": 58,
+      "gmv_cupom": 3808.62,
+      "desconto_total": 368.47,
+      "ticket_medio_cupom": 65.67,
+      "gmv_por_cupom": 10.34,
+      "lojas_unicas_cupom": 34,
+      "painel": {
+        "pedidos_totais": 202,
+        "cancelados": 19,
+        "pct_cancelados": 9.4,
+        "entrega": 161,
+        "retirada": 41,
+        "fonte": "Painel > Histórico (autoritativo)"
+      },
+      "ofertas_de_por": {
+        "itens_vendidos": 67,
+        "gmv_produtos": 3461,
+        "subsidio_franquia": 44.05,
+        "subsidio_loja": 1649,
+        "subsidio_dm": 63,
+        "destaques": [
+          "Combos de pizza + refrigerante",
+          "X-Salada + Coca-Cola Lata",
+          "Combos de burguer (Fredie's, Machado)"
+        ]
+      },
+      "top_lojas_gmv": [
+        {
+          "nome": "Top'z Burger",
+          "gmv": 830.78,
+          "pedidos": 12
+        },
+        {
+          "nome": "Garajão do Dog - Jardim Esperança",
+          "gmv": 570.7,
+          "pedidos": 6
+        },
+        {
+          "nome": "Pizzaria Portal",
+          "gmv": 521.5,
+          "pedidos": 5
+        },
+        {
+          "nome": "Garden Hamburgueria e Bistro",
+          "gmv": 391.37,
+          "pedidos": 5
+        },
+        {
+          "nome": "Mietta Café",
+          "gmv": 391.3,
+          "pedidos": 7
+        },
+        {
+          "nome": "Sushi Yume",
+          "gmv": 319.9,
+          "pedidos": 3
+        },
+        {
+          "nome": "Big X-Costela Pioneiro Desde 2016",
+          "gmv": 214.0,
+          "pedidos": 3
+        },
+        {
+          "nome": "MasterPizza Delivery - Campo da Água Verde",
+          "gmv": 167.85,
+          "pedidos": 3
+        },
+        {
+          "nome": "Burger Flex Hamburgueria",
+          "gmv": 160.5,
+          "pedidos": 3
+        },
+        {
+          "nome": "Bom Apetite",
+          "gmv": 146.89,
+          "pedidos": 5
+        }
+      ],
+      "top_lojas_pedidos": [
+        {
+          "nome": "Top'z Burger",
+          "gmv": 830.78,
+          "pedidos": 12
+        },
+        {
+          "nome": "Mietta Café",
+          "gmv": 391.3,
+          "pedidos": 7
+        },
+        {
+          "nome": "Garajão do Dog - Jardim Esperança",
+          "gmv": 570.7,
+          "pedidos": 6
+        },
+        {
+          "nome": "Garden Hamburgueria e Bistro",
+          "gmv": 391.37,
+          "pedidos": 5
+        },
+        {
+          "nome": "Pizzaria Portal",
+          "gmv": 521.5,
+          "pedidos": 5
+        },
+        {
+          "nome": "Bom Apetite",
+          "gmv": 146.89,
+          "pedidos": 5
+        },
+        {
+          "nome": "Sushi Yume",
+          "gmv": 319.9,
+          "pedidos": 3
+        },
+        {
+          "nome": "Big X-Costela Pioneiro Desde 2016",
+          "gmv": 214.0,
+          "pedidos": 3
+        },
+        {
+          "nome": "MasterPizza Delivery - Campo da Água Verde",
+          "gmv": 167.85,
+          "pedidos": 3
+        },
+        {
+          "nome": "Burger Flex Hamburgueria",
+          "gmv": 160.5,
+          "pedidos": 3
+        }
+      ],
+      "cupons_uso": [
+        {
+          "codigo": "PEDEDM",
+          "pedidos": 46
+        },
+        {
+          "codigo": "#MUCH20",
+          "pedidos": 4
+        },
+        {
+          "codigo": "MUCH20",
+          "pedidos": 4
+        },
+        {
+          "codigo": "GOLEIRO",
+          "pedidos": 2
+        },
+        {
+          "codigo": "BIONDI",
+          "pedidos": 2
+        }
+      ],
+      "cupons_categoria": [
+        {
+          "categoria": "Bebidas",
+          "qtd": 52
+        },
+        {
+          "categoria": "Bom e Barato",
+          "qtd": 30
+        },
+        {
+          "categoria": "Ofertas",
+          "qtd": 28
+        },
+        {
+          "categoria": "Combos Coca-Cola",
+          "qtd": 24
+        },
+        {
+          "categoria": "Combão com Desconto",
+          "qtd": 21
+        },
+        {
+          "categoria": "Porções",
+          "qtd": 21
+        }
+      ],
+      "pendencias": [
+        "Ranking de lojas por GMV/pedidos vem da aba 'Geral' do Data Much, que é parcial frente ao Painel (validado: soma de pedidos dessa aba ≈ 85 vs. 202 reais no Painel)",
+        "Lojas cadastradas por campanha ainda não localizado no Data Much — precisa perguntar ao suporte Delivery Much"
+      ]
+    }
+  ],
+  "investimentos": {
+    "periodo": "01/07/2026 a 16/07/2026",
+    "atualizado_em": "2026-07-17",
+    "verificacao_dados_recentes": "Checado em 17/07/2026: Data Much ainda não fechou o dia 16/07 (GMV do dia continua parcial, R$ 239,20) e os relatórios de Cupom/Ofertas não mudaram desde a última coleta. Assim que houver um dia novo completo, entra automaticamente na próxima atualização.",
+    "componentes": [
+      {"nome": "Ofertas De/Por — subsídio franquia", "valor": 1258.89, "obs": "Mês completo (01–31/07); Data Much só tem pedidos até ~16/07"},
+      {"nome": "Cupom — subsídio franquia (direto)", "valor": 286.94, "obs": "01–16/07 · filtro Subsídio = Franquia"},
+      {"nome": "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia", "valor": 730.37, "obs": "50% de R$ 1.460,74 · 01–16/07"},
+      {"nome": "Entrega promocional — subsídio franquia", "valor": 0.00, "obs": "Mês completo · inclui variante 'com pedido mínimo' (ambas zeradas)"}
+    ],
+    "total_confirmado": 2276.20,
+    "pendencias": [
+      "Confirmado com você: não existe subsídio separado de 'entrega grátis' — só entrega promocional entra na conta (removido da fórmula).",
+      "Por loja: só 'entrega promocional' está detalhada por loja até agora (R$0,00 em todas este mês). De/Por e Cupom aparecem só no total do mês — dá pra detalhar por loja numa próxima atualização.",
+      "Por campanha: ainda não localizei uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
+    ]
+  }
+};
+
+function fmtMoney(v){
+  return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+function fmtPct(v){
+  return (v>0?'+':'') + v.toFixed(2).replace('.',',') + '%';
+}
+function fmtInt(v){
+  return v.toLocaleString('pt-BR');
+}
+
+const daySelect = document.getElementById('daySelect');
+// only days with full detail are selectable
+dataStore.dias.forEach((d,i)=>{
+  const opt = document.createElement('option');
+  opt.value = i;
+  const [y,m,dd] = d.data.split('-');
+  opt.textContent = `${dd}/${m}/${y}`;
+  daySelect.appendChild(opt);
+});
+daySelect.value = dataStore.dias.length - 1;
+
+let lojaMode = 'gmv';
+
+function renderMonth(){
+  const c = dataStore.contexto_mensal;
+  const box = document.getElementById('monthKpis');
+  box.innerHTML = `
+    <div class="kpi navy">
+      <div class="value">${fmtMoney(c.gmv_realizado_mes)}</div>
+      <div class="label">GMV realizado no mês</div>
+      <div class="sub ${c.gmv_mom_pct>=0?'good':'warn'}">${fmtPct(c.gmv_mom_pct)} vs. mês anterior</div>
+    </div>
+    <div class="kpi navy">
+      <div class="value">${fmtMoney(c.gmv_projetado_mes)}</div>
+      <div class="label">GMV projetado (fim do mês)</div>
+      <div class="sub">Meta do mês: ${fmtMoney(c.meta_mes)}</div>
+    </div>
+    <div class="kpi navy">
+      <div class="value">${c.pct_realizado_ate_ontem.toFixed(2).replace('.',',')}%</div>
+      <div class="label">% da meta batida até ontem</div>
+      <div class="sub ${c.pct_realizado_ate_ontem>=100?'good':'warn'}">Meta até ontem: ${fmtMoney(c.meta_ate_ontem)}</div>
+    </div>
+    <div class="kpi navy">
+      <div class="value">${fmtMoney(c.gmv_acumulado_ano)}</div>
+      <div class="label">GMV acumulado no ano</div>
+      <div class="sub ${c.gmv_yoy_ano_pct>=0?'good':'warn'}">${fmtPct(c.gmv_yoy_ano_pct)} vs. ano anterior</div>
+    </div>
+  `;
+}
+
+function renderDay(){
+  const d = dataStore.dias[daySelect.value];
+  document.getElementById('genInfo').textContent =
+    `Dia selecionado: ${daySelect.options[daySelect.selectedIndex].textContent} · fonte: Data Much (Metabase) + Painel Delivery Much`;
+
+  const pctMeta = (d.gmv_dia / d.meta_dia * 100).toFixed(1);
+  document.getElementById('dayKpis').innerHTML = `
+    <div class="kpi">
+      <div class="value">${fmtMoney(d.gmv_dia)}</div>
+      <div class="label">GMV do dia</div>
+      <div class="sub ${pctMeta>=100?'good':'warn'}">${pctMeta}% da meta (${fmtMoney(d.meta_dia)})</div>
+    </div>
+    <div class="kpi">
+      <div class="value">${d.pedidos_cupom}</div>
+      <div class="label">Pedidos com cupom</div>
+      <div class="sub">Ticket médio: ${fmtMoney(d.ticket_medio_cupom)}</div>
+    </div>
+    <div class="kpi">
+      <div class="value">${fmtMoney(d.desconto_total)}</div>
+      <div class="label">Desconto total concedido</div>
+      <div class="sub">GMV com cupom: ${fmtMoney(d.gmv_cupom)}</div>
+    </div>
+    <div class="kpi">
+      <div class="value">${d.lojas_unicas_cupom}</div>
+      <div class="label">Lojas únicas com cupom usado</div>
+      <div class="sub">GMV por cupom: ${fmtMoney(d.gmv_por_cupom)}</div>
+    </div>
+  `;
+
+  const p = d.painel;
+  document.getElementById('painelKpis').innerHTML = `
+    <div class="kpi navy">
+      <div class="value">${fmtInt(p.pedidos_totais)}</div>
+      <div class="label">Pedidos totais (Painel)</div>
+      <div class="sub">Fonte autoritativa</div>
+    </div>
+    <div class="kpi navy">
+      <div class="value">${fmtInt(p.cancelados)}</div>
+      <div class="label">Pedidos cancelados</div>
+      <div class="sub warn">${p.pct_cancelados.toFixed(1).replace('.',',')}% do total</div>
+    </div>
+    <div class="kpi navy">
+      <div class="value">${fmtInt(p.entrega)}</div>
+      <div class="label">Entregas</div>
+      <div class="sub good">${(p.entrega/p.pedidos_totais*100).toFixed(1).replace('.',',')}% do total</div>
+    </div>
+    <div class="kpi navy">
+      <div class="value">${fmtInt(p.retirada)}</div>
+      <div class="label">Retirada no local</div>
+      <div class="sub">${(p.retirada/p.pedidos_totais*100).toFixed(1).replace('.',',')}% do total</div>
+    </div>
+  `;
+
+  renderLojas();
+
+  const maxCupom = Math.max(...d.cupons_uso.map(c=>c.pedidos));
+  document.getElementById('cuponsBars').innerHTML = d.cupons_uso.map(c=>`
+    <div class="bar-row">
+      <div class="bar-label">${c.codigo}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(c.pedidos/maxCupom*100).toFixed(0)}%"></div></div>
+      <div class="bar-value">${c.pedidos}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('categoriaLines').innerHTML = d.cupons_categoria.map(c=>`
+    <div class="stat-line"><span>${c.categoria}</span><b>${c.qtd}</b></div>
+  `).join('');
+
+  const o = d.ofertas_de_por;
+  document.getElementById('ofertasBox').innerHTML = `
+    <div class="kpis" style="margin-bottom:16px;">
+      <div class="kpi">
+        <div class="value">${fmtInt(o.itens_vendidos)}</div>
+        <div class="label">Itens vendidos em oferta</div>
+      </div>
+      <div class="kpi">
+        <div class="value">${fmtMoney(o.gmv_produtos)}</div>
+        <div class="label">GMV desses produtos</div>
+      </div>
+      <div class="kpi">
+        <div class="value">${fmtMoney(o.subsidio_franquia)}</div>
+        <div class="label">Subsídio pago pela franquia</div>
+      </div>
+      <div class="kpi">
+        <div class="value">${fmtMoney(o.subsidio_loja)}</div>
+        <div class="label">Subsídio pago pelas lojas</div>
+      </div>
+    </div>
+    <div>${o.destaques.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+  `;
+
+  document.getElementById('pendingBox').innerHTML = d.pendencias && d.pendencias.length
+    ? d.pendencias.map(p=>`• ${p}`).join('<br>')
+    : 'Nenhuma pendência registrada para este dia.';
+}
+
+function renderLojas(){
+  const d = dataStore.dias[daySelect.value];
+  const list = lojaMode === 'gmv' ? d.top_lojas_gmv : d.top_lojas_pedidos;
+  document.getElementById('lojasBody').innerHTML = list.map((l,i)=>`
+    <tr><td><span class="rank">${i+1}</span></td><td>${l.nome}</td><td><b>${fmtMoney(l.gmv)}</b></td><td>${l.pedidos}</td></tr>
+  `).join('');
+}
+
+document.getElementById('lojaToggle').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#lojaToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  lojaMode = btn.dataset.mode;
+  renderLojas();
+});
+
+function renderCompare(){
+  const c = dataStore.comparativo_mes_anterior;
+  document.getElementById('momCompare').innerHTML = `
+    <div class="kpi">
+      <div class="value">${fmtMoney(c.dia_15_junho.gmv)}</div>
+      <div class="label">15/06/2026 (mês anterior)</div>
+      <div class="sub">Meta: ${fmtMoney(c.dia_15_junho.meta)}</div>
+    </div>
+    <div class="kpi">
+      <div class="value">${fmtMoney(c.dia_15_julho.gmv)}</div>
+      <div class="label">15/07/2026 (dia atual)</div>
+      <div class="sub">Meta: ${fmtMoney(c.dia_15_julho.meta)}</div>
+    </div>
+    <div class="kpi navy">
+      <div class="value">${fmtPct(c.variacao_pct)}</div>
+      <div class="label">Variação no mesmo dia</div>
+      <div class="sub good">Dia 15 cresceu bem mês a mês</div>
+    </div>
+  `;
+}
+
+function renderLive(){
+  const l = dataStore.pedidos_ao_vivo_hoje;
+  if(!l) return;
+  document.getElementById('liveCheckTime').textContent = `· checado às ${l.checado_em} de ${l.data.split('-').reverse().join('/')}`;
+  document.getElementById('liveKpis').innerHTML = `
+    <div class="kpi">
+      <div class="value">${fmtInt(l.pedidos_totais)}</div>
+      <div class="label">Pedidos hoje até agora</div>
+      <div class="sub">Fonte: ${l.fonte}</div>
+    </div>
+    <div class="kpi">
+      <div class="value">${fmtInt(l.cancelados)}</div>
+      <div class="label">Cancelados hoje</div>
+      <div class="sub ${l.pct_cancelados>20?'warn':'good'}">${l.pct_cancelados.toFixed(1).replace('.',',')}% do total</div>
+    </div>
+    <div class="kpi">
+      <div class="value">${fmtMoney(l.gmv_total)}</div>
+      <div class="label">GMV bruto hoje</div>
+      <div class="sub">Todos os pedidos, inclusive cancelados</div>
+    </div>
+    <div class="kpi">
+      <div class="value">${fmtMoney(l.gmv_valido)}</div>
+      <div class="label">GMV válido hoje</div>
+      <div class="sub">Excluindo cancelados</div>
+    </div>
+  `;
+}
+
+function renderInvest(){
+  const inv = dataStore.investimentos;
+  document.getElementById('investPeriodo').textContent = `Período: ${inv.periodo}`;
+  document.getElementById('investTotal').textContent = fmtMoney(inv.total_confirmado);
+  document.getElementById('investBody').innerHTML = inv.componentes.map(c=>`
+    <tr><td>${c.nome}</td><td><b>${c.valor===null ? '—' : fmtMoney(c.valor)}</b></td><td style="color:var(--muted);font-size:12.5px;">${c.obs}</td></tr>
+  `).join('');
+  const notas = (inv.verificacao_dados_recentes ? [inv.verificacao_dados_recentes] : []).concat(inv.pendencias);
+  document.getElementById('investPending').innerHTML = notas.map(p=>`• ${p}`).join('<br>');
+}
+
+let chartInstance = null;
+function renderChart(){
+  const ctx = document.getElementById('gmvChart');
+  const serie = dataStore.gmv_diario_mes;
+  const labels = serie.map(d=>{
+    const [y,m,dd] = d.data.split('-');
+    return `${dd}/${m}`;
+  });
+  const gmvData = serie.map(d=>d.gmv);
+  const metaData = serie.map(d=>d.meta);
+  if(chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {label:'GMV realizado', data: gmvData, borderColor:'#c0392b', backgroundColor:'rgba(192,57,43,.12)', fill:true, tension:.3},
+        {label:'Meta do dia', data: metaData, borderColor:'#1b2a3d', borderDash:[5,4], fill:false, tension:.3}
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{legend:{position:'bottom'}},
+      scales:{y:{ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR')}}}
+    }
+  });
+}
+
+daySelect.addEventListener('change', renderDay);
+
+function boot(){
+  renderLive();
+  renderMonth();
+  renderDay();
+  renderChart();
+  renderCompare();
+  renderInvest();
+  const dm = dataStore.data_much_status;
+  document.getElementById('checkInfo').textContent = `Última verificação de dados novos no Data Much: ${dataStore.ultima_verificacao_dados}` +
+    (dm ? ` · Data Much marcava ${dm.ultima_atualizacao_conhecida}${dm.novo_dia_detectado ? ' (dia novo já processado)' : ' (ainda sem dia novo fechado)'}` : '');
+}
+if(document.getElementById('appContent').style.display === 'block'){
+  boot();
+}
+</script>
+
+</body>
+</html>
