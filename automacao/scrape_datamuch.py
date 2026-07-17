@@ -346,11 +346,18 @@ def main():
 
             if ja_conhecida:
                 print(f"Sem novidade no Data Much (última atualização lá: {data_datamuch}).")
-                # Mesmo sem mudança de dados, atualiza "verificado_em" pra registrar que checamos
-                # (só no JSON local — não vale a pena commitar/deployar só por isso, o
-                # workflow não roda os passos de deploy/commit quando mudou=false).
-                status = historico_atual.setdefault("data_much_status", {})
+                # Mesmo sem mudança de dados, registra que checamos — só localmente nos 2
+                # arquivos (não vale a pena commitar/deployar só por isso; o workflow não
+                # roda os passos de deploy/commit quando mudou=false, então essa escrita
+                # fica só na cópia local do runner, descartada no final do job).
+                status = historico_atual.get("data_much_status", {})
                 status["verificado_em"] = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
+                status_json = json.dumps(status, ensure_ascii=False, indent=2)
+                for path in (INDEX_HTML_PATH, HISTORICO_JSON_PATH):
+                    if path.exists():
+                        texto = path.read_text(encoding="utf-8")
+                        texto = substituir_bloco_objeto(texto, "data_much_status", status_json)
+                        path.write_text(texto, encoding="utf-8")
                 escrever_output("mudou", "false")
                 return
 
