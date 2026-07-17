@@ -13,6 +13,10 @@ Seletores de login confirmados manualmente em 17/07/2026 (tela real):
   - campo senha:   <input type="password" placeholder="Senha">
   - botão:         <button type="submit">LOGIN</button>
 
+NOTA IMPORTANTE (correção pós primeira falha): usar wait_until="networkidle" trava em sites
+com atividade de rede contínua (analytics, polling, websockets) — o Painel parece ter isso.
+Trocado para "domcontentloaded" + esperas explícitas em elementos/URL específicos.
+
 Os seletores da tela de Histórico (filtro de data, tabela de resultados) ainda são
 melhor-esforço — se o job falhar depois do login, é ali. Rode manualmente (workflow_dispatch)
 e ajuste conforme o erro indicar.
@@ -41,6 +45,8 @@ HISTORICO_JSON_PATH = REPO_ROOT / "historico_vendas.json"
 
 BR_TZ = timezone(timedelta(hours=-3))  # Brasília, sem horário de verão atualmente
 
+NAV_TIMEOUT_MS = 45000
+
 
 def parse_valor_brl(texto: str) -> float:
     """Converte 'R$ 1.234,56' -> 1234.56"""
@@ -50,30 +56,29 @@ def parse_valor_brl(texto: str) -> float:
 
 
 def login_painel(page):
-    page.goto(PAINEL_URL_LOGIN, wait_until="networkidle")
+    page.goto(PAINEL_URL_LOGIN, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
     email = os.environ["PAINEL_EMAIL"]
     senha = os.environ["PAINEL_SENHA"]
     page.get_by_placeholder("Usuário").fill(email)
     page.get_by_placeholder("Senha").fill(senha)
     page.get_by_role("button", name=re.compile("login", re.I)).click()
-    page.wait_for_load_state("networkidle")
-    # Confere que saiu da tela de login (se ainda estiver em /login, as credenciais falharam).
-    if "/login" in page.url:
-        raise RuntimeError("Login falhou — ainda na tela de login após submeter. Confira PAINEL_EMAIL/PAINEL_SENHA.")
+    # Espera sair da tela de login (URL muda) em vez de esperar a rede "acalmar".
+    page.wait_for_url(lambda url: "/login" not in url, timeout=NAV_TIMEOUT_MS)
 
 
 def coletar_pedidos_hoje(page) -> dict:
-    page.goto(PAINEL_URL_HISTORICO, wait_until="networkidle")
+    page.goto(PAINEL_URL_HISTORICO, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
 
     # TODO: confirmar seletor real do botão/campo de filtro de datas (ainda não verificado
     # contra o DOM real — só contra o texto visível da tela).
-    page.get_by_role("button", name=re.compile("data", re.I)).first.click()
-    page.get_by_text("Hoje", exact=True).click()
-    page.get_by_role("button", name=re.compile("aplicar|apply", re.I)).click()
-    page.wait_for_load_state("networkidle")
+    page.get_by_role("button", name=re.compile("data", re.I)).first.click(timeout=NAV_TIMEOUT_MS)
+    page.get_by_text("Hoje", exact=True).click(timeout=NAV_TIMEOUT_MS)
+    page.get_by_role("button", name=re.compile("aplicar|apply", re.I)).click(timeout=NAV_TIMEOUT_MS)
 
     # Confirma o texto "Exibindo 1 a X de Y resultados" pra pegar o total.
-    resumo = page.get_by_text(re.compile(r"Exibindo \d+ a \d+ de \d+ resultados")).inner_text()
+    resumo_locator = page.get_by_text(re.compile(r"Exibindo \d+ a \d+ de \d+ resultados"))
+    resumo_locator.wait_for(state="visible", timeout=NAV_TIMEOUT_MS)
+    resumo = resumo_locator.inner_text()
     total_pedidos = int(re.search(r"de (\d+) resultados", resumo).group(1))
 
     linhas = []
@@ -90,8 +95,8 @@ def coletar_pedidos_hoje(page) -> dict:
 
         proxima = page.get_by_role("button", name=re.compile("próxima|next", re.I))
         if proxima.is_enabled():
-            proxima.click()
-            page.wait_for_load_state("networkidle")
+            proxima.click(timeout=NAV_TIMEOUT_MS)
+            page.wait_for_timeout(1500)  # pequena espera fixa pra tabela recarregar
             pagina += 1
         else:
             break
@@ -148,6 +153,7 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
+        page.set_default_timeout(NAV_TIMEOUT_MS)
         try:
             login_painel(page)
             dados = coletar_pedidos_hoje(page)
