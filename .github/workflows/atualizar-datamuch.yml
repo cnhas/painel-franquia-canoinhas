@@ -59,6 +59,15 @@ jobs:
           DATAMUCH_SENHA: ${{ secrets.DATAMUCH_SENHA }}
         run: python automacao/scrape_datamuch.py
 
+      - name: Publicar screenshot de erro (se der falha)
+        if: failure() && steps.verificar.outputs.pular != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: erro-debug-datamuch
+          path: erro_*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Cache do Netlify CLI
         if: steps.coletar.outputs.mudou == 'true'
         uses: actions/cache@v4
