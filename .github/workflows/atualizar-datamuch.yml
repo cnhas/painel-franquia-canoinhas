@@ -1,0 +1,90 @@
+# Verifica o Data Much (dados de GMV mensal — fecha só 1x/dia, em hora variável, entre
+# ~7h30 e o início da tarde) e, só quando encontra um dia novo fechado, atualiza o
+# dashboard e publica. Duas economias de custo:
+#   1. Assim que uma execução acha a atualização do dia, as próximas checagens do MESMO
+#      dia nem abrem o navegador — só um pre-check rápido (~poucos segundos) que lê o
+#      arquivo e sai. Isso evita gastar minutos repetindo login+scraping sem necessidade.
+#   2. Quando não tem novidade, os passos de deploy/commit também não rodam.
+
+name: Atualizar Data Much
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    # 7h30-15h (Brasília) a cada 30 min -> 10h30-18h UTC
+    - cron: '30 10 * * *'
+    - cron: '0,30 11-17 * * *'
+    - cron: '0 18 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verificar se hoje já foi confirmado (pula o resto se sim)
+        id: verificar
+        run: python automacao/verificar_datamuch_ok.py
+
+      - name: Cache do navegador Playwright (Chromium)
+        if: steps.verificar.outputs.pular != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}
+
+      - name: Instalar dependências Python (Playwright)
+        if: steps.verificar.outputs.pular != 'true'
+        run: pip install playwright
+
+      - name: Instalar navegador + libs do sistema (Playwright)
+        if: steps.verificar.outputs.pular != 'true'
+        run: playwright install --with-deps chromium
+
+      - name: Verificar Data Much e atualizar arquivos (se tiver novidade)
+        if: steps.verificar.outputs.pular != 'true'
+        id: coletar
+        env:
+          DATAMUCH_EMAIL: ${{ secrets.DATAMUCH_EMAIL }}
+          DATAMUCH_SENHA: ${{ secrets.DATAMUCH_SENHA }}
+        run: python automacao/scrape_datamuch.py
+
+      - name: Cache do Netlify CLI
+        if: steps.coletar.outputs.mudou == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm-global
+          key: netlify-cli-${{ runner.os }}
+
+      - name: Publicar no Netlify
+        if: steps.coletar.outputs.mudou == 'true'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          mkdir -p ~/.npm-global
+          npm config set prefix "$HOME/.npm-global"
+          echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.npm-global/bin:$PATH"
+          command -v netlify >/dev/null 2>&1 || npm install -g netlify-cli
+          netlify deploy --prod --dir=. --site="$NETLIFY_SITE_ID"
+
+      - name: Commitar mudanças de volta pro repositório
+        if: steps.coletar.outputs.mudou == 'true'
+        run: |
+          git config user.name "datamuch-bot"
+          git config user.email "datamuch-bot@users.noreply.github.com"
+          git add index.html historico_vendas.json
+          git diff --cached --quiet || git commit -m "Atualiza contexto mensal Data Much [automático]"
+          git pull --rebase origin main
+          git push
