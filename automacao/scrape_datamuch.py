@@ -263,6 +263,50 @@ def atualizar_arquivos(novo_contexto: dict, gmv_diario_novo: list, data_datamuch
         print(f"Atualizado: {path}")
 
 
+def _diagnosticar_erro(page):
+    """Salva screenshot + informações de diagnóstico quando algo dá errado — sem isso é
+    impossível saber o que aconteceu de verdade numa execução do GitHub Actions (não tem
+    como abrir o navegador remotamente pra ver)."""
+    try:
+        page.screenshot(path="erro_pagina_principal.png", full_page=True)
+    except Exception as e:
+        print(f"(não consegui tirar screenshot da página principal: {e})")
+
+    try:
+        print(f"URL atual: {page.url}")
+        print(f"Título da página: {page.title()}")
+        iframes = page.query_selector_all("iframe")
+        print(f"Quantidade de <iframe> na página: {len(iframes)}")
+        for i, el in enumerate(iframes):
+            try:
+                src = el.get_attribute("src") or "(sem src)"
+                # Corta a URL pra não vazar token/query string nos logs.
+                src_curto = src.split("?")[0]
+                box = el.bounding_box()
+                print(f"  iframe[{i}]: src={src_curto} bounding_box={box}")
+            except Exception as e:
+                print(f"  iframe[{i}]: erro ao inspecionar ({e})")
+        # Tenta printar o texto visível da página principal (fora do iframe) — pode
+        # revelar uma mensagem de erro, banner de cookie, ou tela de acesso negado.
+        texto_pagina = page.locator("body").inner_text()[:1500]
+        print(f"Texto da página principal (primeiros 1500 chars): {texto_pagina!r}")
+    except Exception as e:
+        print(f"(diagnóstico extra falhou: {e})")
+
+    try:
+        frame = page.frame_locator("iframe").first
+        frame.locator("body").screenshot(path="erro_iframe.png", timeout=5000)
+    except Exception as e:
+        print(f"(não consegui tirar screenshot do conteúdo do iframe: {e})")
+
+    try:
+        frame = page.frame_locator("iframe").first
+        texto_frame = frame.locator("body").inner_text(timeout=5000)[:1500]
+        print(f"Texto dentro do iframe (primeiros 1500 chars): {texto_frame!r}")
+    except Exception as e:
+        print(f"(não consegui ler texto de dentro do iframe: {e})")
+
+
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -303,12 +347,12 @@ def main():
 
         except PlaywrightTimeoutError as e:
             print(f"::error::Timeout esperando elemento — provavelmente um seletor mudou: {e}")
-            page.screenshot(path="erro_debug_datamuch.png")
+            _diagnosticar_erro(page)
             escrever_output("mudou", "false")
             sys.exit(1)
         except RuntimeError as e:
             print(f"::error::{e}")
-            page.screenshot(path="erro_datamuch.png")
+            _diagnosticar_erro(page)
             escrever_output("mudou", "false")
             sys.exit(1)
         finally:
