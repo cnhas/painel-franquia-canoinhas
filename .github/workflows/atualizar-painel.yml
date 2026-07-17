@@ -3,6 +3,9 @@
 
 name: Atualizar painel franquia
 
+permissions:
+  contents: write  # necessário pra job conseguir dar git push de volta pro repositório
+
 on:
   schedule:
     # 11h-13h (Brasília) a cada 15 min -> 14h-15h59 UTC
@@ -53,4 +56,5 @@ jobs:
           git config user.email "painel-bot@users.noreply.github.com"
           git add index.html historico_vendas.json
           git diff --cached --quiet || git commit -m "Atualiza pedidos ao vivo [automático]"
+          git pull --rebase origin main
           git push
