@@ -63,9 +63,25 @@ def login_painel(page):
     page.wait_for_url(lambda url: "/login" not in url, timeout=NAV_TIMEOUT_MS)
 
 
+def esperar_carregamento(page):
+    """A página usa um overlay global (#global-loading-overlay) pra indicar requisições AJAX
+    em andamento. Espera ele aparecer (se for aparecer) e depois sumir, garantindo que a
+    tabela já reflete a última ação (filtro de data, troca de página, etc.) antes de seguir.
+    Sem isso, duas ações em sequência rápida (ex: clicar 'Hoje' e já trocar o 'resultados por
+    página') podem disparar duas requisições que se sobrepõem, e a que responde por último
+    'vence' — não necessariamente a mais recente pedida."""
+    overlay = page.locator("#global-loading-overlay")
+    try:
+        overlay.wait_for(state="visible", timeout=2000)
+    except PlaywrightTimeoutError:
+        pass  # requisição pode ter sido rápida demais pra pegar o overlay aparecendo
+    overlay.wait_for(state="hidden", timeout=NAV_TIMEOUT_MS)
+
+
 def selecionar_100_por_pagina(page):
     """Acha, entre os <select> da página, o que tem opções 10/25/50/100 (resultados por
-    página) — não confiar em posição, porque o seletor de UF/estado também é um <select>."""
+    página) — não confiar em posição, porque tem outros <select> na página (cidade, empresa,
+    estado/UF)."""
     selects = page.locator("select")
     total = selects.count()
     for i in range(total):
@@ -74,17 +90,23 @@ def selecionar_100_por_pagina(page):
         opcoes_limpo = [o.strip() for o in opcoes]
         if "100" in opcoes_limpo and "50" in opcoes_limpo and "10" in opcoes_limpo:
             s.select_option("100")
+            esperar_carregamento(page)
             return
     print("::warning::Não achei o seletor de 'resultados por página' — seguindo com o padrão (pode paginar).")
 
 
 def coletar_pedidos_hoje(page) -> dict:
     page.goto(PAINEL_URL_HISTORICO, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+    esperar_carregamento(page)
 
     # Botão de datas mostra algo como "JULHO 17, 2026 - JULHO 17, 2026" — identifica pelo ano (4 dígitos).
     page.get_by_role("button", name=re.compile(r"\d{4}")).click(timeout=NAV_TIMEOUT_MS)
     # "Hoje" já aplica o filtro sozinho, sem precisar de um botão "Aplicar" separado.
     page.get_by_text("Hoje", exact=True).click(timeout=NAV_TIMEOUT_MS)
+    # Espera o filtro "Hoje" terminar de carregar ANTES de mexer no seletor de página —
+    # trocar os dois rápido demais causa corrida entre as duas requisições AJAX (foi a causa
+    # real de um bug em que o total voltava errado, tipo de um período de vários dias).
+    esperar_carregamento(page)
 
     selecionar_100_por_pagina(page)
 
