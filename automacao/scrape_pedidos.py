@@ -15,9 +15,9 @@ Seletores confirmados manualmente em 17/07/2026 contra o DOM real (via navegador
     JÁ APLICA o filtro sozinho (não existe botão "Aplicar" separado pra presets).
   - texto de contagem: "Exibindo 1 a 10 de 41 resultados." (aparece embaixo da tabela, à
     esquerda, não perto da paginação numerada).
-  - "resultados por página": <select> com opções 10/25/50/100 — trocado pra 100 pra pegar
-    tudo numa página só e evitar paginação (dias normais não passam de 100 pedidos; se
-    passar, os últimos ficam de fora — ok por ora, dá pra evoluir depois).
+  - "resultados por página": existem DOIS <select> na página (o de resultados por página E o
+    de estado/UF no rodapé) — identificar pelo conteúdo das opções (10/25/50/100), não por
+    posição, senão pode pegar o select errado.
 
 Requisitos: pip install playwright && playwright install chromium
 Variáveis de ambiente necessárias:
@@ -60,8 +60,22 @@ def login_painel(page):
     page.get_by_placeholder("Usuário").fill(email)
     page.get_by_placeholder("Senha").fill(senha)
     page.get_by_role("button", name=re.compile("login", re.I)).click()
-    # Espera sair da tela de login (URL muda) em vez de esperar a rede "acalmar".
     page.wait_for_url(lambda url: "/login" not in url, timeout=NAV_TIMEOUT_MS)
+
+
+def selecionar_100_por_pagina(page):
+    """Acha, entre os <select> da página, o que tem opções 10/25/50/100 (resultados por
+    página) — não confiar em posição, porque o seletor de UF/estado também é um <select>."""
+    selects = page.locator("select")
+    total = selects.count()
+    for i in range(total):
+        s = selects.nth(i)
+        opcoes = s.locator("option").all_inner_texts()
+        opcoes_limpo = [o.strip() for o in opcoes]
+        if "100" in opcoes_limpo and "50" in opcoes_limpo and "10" in opcoes_limpo:
+            s.select_option("100")
+            return
+    print("::warning::Não achei o seletor de 'resultados por página' — seguindo com o padrão (pode paginar).")
 
 
 def coletar_pedidos_hoje(page) -> dict:
@@ -72,8 +86,7 @@ def coletar_pedidos_hoje(page) -> dict:
     # "Hoje" já aplica o filtro sozinho, sem precisar de um botão "Aplicar" separado.
     page.get_by_text("Hoje", exact=True).click(timeout=NAV_TIMEOUT_MS)
 
-    # Aumenta resultados por página pra 100, pra pegar tudo numa página só.
-    page.locator("select").first.select_option("100")
+    selecionar_100_por_pagina(page)
 
     # Confirma o texto "Exibindo 1 a X de Y resultados." pra pegar o total.
     resumo_locator = page.get_by_text(re.compile(r"Exibindo \d+ a \d+ de \d+ resultados"))
