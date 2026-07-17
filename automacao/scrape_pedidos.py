@@ -8,18 +8,16 @@ O que faz:
 4. Atualiza o dataStore embutido em index.html (e historico_vendas.json, se presente).
 5. Publica no Netlify via CLI (netlify deploy --prod), usando NETLIFY_AUTH_TOKEN / NETLIFY_SITE_ID.
 
-Seletores de login confirmados manualmente em 17/07/2026 (tela real):
-  - campo usuário: <input type="text" placeholder="Usuário">  (sem <label>)
-  - campo senha:   <input type="password" placeholder="Senha">
-  - botão:         <button type="submit">LOGIN</button>
-
-NOTA IMPORTANTE (correção pós primeira falha): usar wait_until="networkidle" trava em sites
-com atividade de rede contínua (analytics, polling, websockets) — o Painel parece ter isso.
-Trocado para "domcontentloaded" + esperas explícitas em elementos/URL específicos.
-
-Os seletores da tela de Histórico (filtro de data, tabela de resultados) ainda são
-melhor-esforço — se o job falhar depois do login, é ali. Rode manualmente (workflow_dispatch)
-e ajuste conforme o erro indicar.
+Seletores confirmados manualmente em 17/07/2026 contra o DOM real (via navegador logado):
+  - login: <input placeholder="Usuário">, <input placeholder="Senha">, <button>LOGIN</button>
+  - histórico: botão de datas mostra o texto "JULHO 17, 2026 - JULHO 17, 2026" (sem a palavra
+    "data" nele!) — selecionado por regex de 4 dígitos (ano). Dropdown tem um link "Hoje" que
+    JÁ APLICA o filtro sozinho (não existe botão "Aplicar" separado pra presets).
+  - texto de contagem: "Exibindo 1 a 10 de 41 resultados." (aparece embaixo da tabela, à
+    esquerda, não perto da paginação numerada).
+  - "resultados por página": <select> com opções 10/25/50/100 — trocado pra 100 pra pegar
+    tudo numa página só e evitar paginação (dias normais não passam de 100 pedidos; se
+    passar, os últimos ficam de fora — ok por ora, dá pra evoluir depois).
 
 Requisitos: pip install playwright && playwright install chromium
 Variáveis de ambiente necessárias:
@@ -69,42 +67,37 @@ def login_painel(page):
 def coletar_pedidos_hoje(page) -> dict:
     page.goto(PAINEL_URL_HISTORICO, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
 
-    # TODO: confirmar seletor real do botão/campo de filtro de datas (ainda não verificado
-    # contra o DOM real — só contra o texto visível da tela).
-    page.get_by_role("button", name=re.compile("data", re.I)).first.click(timeout=NAV_TIMEOUT_MS)
+    # Botão de datas mostra algo como "JULHO 17, 2026 - JULHO 17, 2026" — identifica pelo ano (4 dígitos).
+    page.get_by_role("button", name=re.compile(r"\d{4}")).click(timeout=NAV_TIMEOUT_MS)
+    # "Hoje" já aplica o filtro sozinho, sem precisar de um botão "Aplicar" separado.
     page.get_by_text("Hoje", exact=True).click(timeout=NAV_TIMEOUT_MS)
-    page.get_by_role("button", name=re.compile("aplicar|apply", re.I)).click(timeout=NAV_TIMEOUT_MS)
 
-    # Confirma o texto "Exibindo 1 a X de Y resultados" pra pegar o total.
+    # Aumenta resultados por página pra 100, pra pegar tudo numa página só.
+    page.locator("select").first.select_option("100")
+
+    # Confirma o texto "Exibindo 1 a X de Y resultados." pra pegar o total.
     resumo_locator = page.get_by_text(re.compile(r"Exibindo \d+ a \d+ de \d+ resultados"))
     resumo_locator.wait_for(state="visible", timeout=NAV_TIMEOUT_MS)
     resumo = resumo_locator.inner_text()
     total_pedidos = int(re.search(r"de (\d+) resultados", resumo).group(1))
 
+    rows = page.locator("table tbody tr")
+    count = rows.count()
     linhas = []
-    pagina = 1
-    while True:
-        # TODO: confirmar seletor real das linhas da tabela.
-        rows = page.locator("table tbody tr")
-        count = rows.count()
-        for i in range(count):
-            row = rows.nth(i)
-            valor_texto = row.locator("td", has_text="R$").first.inner_text()
-            status_texto = row.inner_text()
-            linhas.append({"valor": parse_valor_brl(valor_texto), "cancelado": "Cancelado" in status_texto})
-
-        proxima = page.get_by_role("button", name=re.compile("próxima|next", re.I))
-        if proxima.is_enabled():
-            proxima.click(timeout=NAV_TIMEOUT_MS)
-            page.wait_for_timeout(1500)  # pequena espera fixa pra tabela recarregar
-            pagina += 1
-        else:
-            break
+    for i in range(count):
+        row = rows.nth(i)
+        valor_texto = row.locator("td", has_text="R$").first.inner_text()
+        status_texto = row.inner_text()
+        linhas.append({"valor": parse_valor_brl(valor_texto), "cancelado": "Cancelado" in status_texto})
 
     cancelados = sum(1 for l in linhas if l["cancelado"])
     gmv_total = round(sum(l["valor"] for l in linhas), 2)
     gmv_valido = round(sum(l["valor"] for l in linhas if not l["cancelado"]), 2)
     pct_cancelados = round(cancelados / total_pedidos * 100, 1) if total_pedidos else 0.0
+
+    if count < total_pedidos:
+        print(f"::warning::Só {count} de {total_pedidos} pedidos carregados na página (limite de 100). "
+              f"Números podem estar levemente subestimados em dias muito cheios.")
 
     agora = datetime.now(BR_TZ)
     return {
@@ -125,7 +118,6 @@ def atualizar_arquivos(dados_pedidos: dict):
             print(f"Aviso: {path} não encontrado, pulando.")
             continue
         texto = path.read_text(encoding="utf-8")
-        # Substitui o bloco "pedidos_ao_vivo_hoje": { ... } por regex controlada.
         novo_bloco = (
             '"pedidos_ao_vivo_hoje": {\n'
             f'    "data": "{dados_pedidos["data"]}",\n'
