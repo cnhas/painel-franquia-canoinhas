@@ -116,7 +116,10 @@ def coletar_pedidos_hoje(page) -> dict:
     resumo = resumo_locator.inner_text()
     total_pedidos = int(re.search(r"de (\d+) resultados", resumo).group(1))
 
-    rows = page.locator("table tbody tr")
+    # "table tbody tr" sozinho também pega linhas do calendarinho do seletor de datas (que
+    # fica sempre no DOM, só escondido) — filtra só linhas que têm "R$" (ou seja, pedidos de
+    # verdade).
+    rows = page.locator("table tbody tr").filter(has_text=re.compile(r"R\$"))
     count = rows.count()
     linhas = []
     for i in range(count):
