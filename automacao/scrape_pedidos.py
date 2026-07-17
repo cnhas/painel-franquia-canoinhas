@@ -8,12 +8,14 @@ O que faz:
 4. Atualiza o dataStore embutido em index.html (e historico_vendas.json, se presente).
 5. Publica no Netlify via CLI (netlify deploy --prod), usando NETLIFY_AUTH_TOKEN / NETLIFY_SITE_ID.
 
-IMPORTANTE — ESTE SCRIPT É UM PONTO DE PARTIDA, NÃO ESTÁ TESTADO CONTRA O SITE REAL.
-Os seletores abaixo (campos de login, filtro de data, tabela de resultados) foram escritos
-com base em texto visível observado manualmente (não no HTML/CSS real), porque quem escreveu
-isso não tinha acesso ao DOM bruto do Painel. Rode este script manualmente uma vez (não no
-cron) e ajuste os seletores conforme o Playwright reclamar de elemento não encontrado —
-normalmente é só trocar o seletor por um mais específico, olhando o erro e um screenshot.
+Seletores de login confirmados manualmente em 17/07/2026 (tela real):
+  - campo usuário: <input type="text" placeholder="Usuário">  (sem <label>)
+  - campo senha:   <input type="password" placeholder="Senha">
+  - botão:         <button type="submit">LOGIN</button>
+
+Os seletores da tela de Histórico (filtro de data, tabela de resultados) ainda são
+melhor-esforço — se o job falhar depois do login, é ali. Rode manualmente (workflow_dispatch)
+e ajuste conforme o erro indicar.
 
 Requisitos: pip install playwright && playwright install chromium
 Variáveis de ambiente necessárias:
@@ -30,7 +32,7 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
-PAINEL_URL_LOGIN = "https://panel.deliverymuch.com.br/login"  # TODO: confirmar URL exata de login
+PAINEL_URL_LOGIN = "https://panel.deliverymuch.com.br/login"
 PAINEL_URL_HISTORICO = "https://panel.deliverymuch.com.br/history"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent  # ajuste se a estrutura do repo for diferente
@@ -47,10 +49,24 @@ def parse_valor_brl(texto: str) -> float:
     return float(limpo)
 
 
+def login_painel(page):
+    page.goto(PAINEL_URL_LOGIN, wait_until="networkidle")
+    email = os.environ["PAINEL_EMAIL"]
+    senha = os.environ["PAINEL_SENHA"]
+    page.get_by_placeholder("Usuário").fill(email)
+    page.get_by_placeholder("Senha").fill(senha)
+    page.get_by_role("button", name=re.compile("login", re.I)).click()
+    page.wait_for_load_state("networkidle")
+    # Confere que saiu da tela de login (se ainda estiver em /login, as credenciais falharam).
+    if "/login" in page.url:
+        raise RuntimeError("Login falhou — ainda na tela de login após submeter. Confira PAINEL_EMAIL/PAINEL_SENHA.")
+
+
 def coletar_pedidos_hoje(page) -> dict:
     page.goto(PAINEL_URL_HISTORICO, wait_until="networkidle")
 
-    # TODO: confirmar seletor real do botão de filtro de datas.
+    # TODO: confirmar seletor real do botão/campo de filtro de datas (ainda não verificado
+    # contra o DOM real — só contra o texto visível da tela).
     page.get_by_role("button", name=re.compile("data", re.I)).first.click()
     page.get_by_text("Hoje", exact=True).click()
     page.get_by_role("button", name=re.compile("aplicar|apply", re.I)).click()
@@ -98,17 +114,6 @@ def coletar_pedidos_hoje(page) -> dict:
     }
 
 
-def login_painel(page):
-    page.goto(PAINEL_URL_LOGIN, wait_until="networkidle")
-    email = os.environ["PAINEL_EMAIL"]
-    senha = os.environ["PAINEL_SENHA"]
-    # TODO: confirmar seletores reais dos campos de login.
-    page.get_by_label(re.compile("e-?mail", re.I)).fill(email)
-    page.get_by_label(re.compile("senha|password", re.I)).fill(senha)
-    page.get_by_role("button", name=re.compile("entrar|login", re.I)).click()
-    page.wait_for_load_state("networkidle")
-
-
 def atualizar_arquivos(dados_pedidos: dict):
     for path in (INDEX_HTML_PATH, HISTORICO_JSON_PATH):
         if not path.exists():
@@ -154,6 +159,10 @@ def main():
         except PlaywrightTimeoutError as e:
             print(f"::error::Timeout esperando elemento — provavelmente um seletor mudou: {e}")
             page.screenshot(path="erro_debug.png")
+            sys.exit(1)
+        except RuntimeError as e:
+            print(f"::error::{e}")
+            page.screenshot(path="erro_login.png")
             sys.exit(1)
         finally:
             browser.close()
