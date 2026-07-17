@@ -96,10 +96,10 @@ def login_datamuch(page):
 def obter_frame_relatorio(page):
     page.goto(DATAMUCH_URL_RELATORIO, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
     frame = page.frame_locator("iframe").first
-    # O embed (tipo Zoho Analytics) demora bem mais que uma página normal pra carregar e
-    # calcular os relatórios, principalmente numa sessão nova/fria — timeout bem mais
-    # generoso que o resto do script (confirmado necessário: 45s não foi suficiente na
-    # primeira tentativa real).
+    # O embed é um relatório do Power BI (confirmado via diagnóstico real: iframe src =
+    # app.powerbi.com/reportEmbed) — demora mais que uma página normal pra carregar e
+    # calcular, principalmente numa sessão nova/fria — timeout bem mais generoso que o
+    # resto do script.
     frame.get_by_text(re.compile(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}")).first.wait_for(
         state="visible", timeout=90000
     )
@@ -107,9 +107,18 @@ def obter_frame_relatorio(page):
 
 
 def ler_ultima_atualizacao(frame) -> datetime:
-    locator = frame.get_by_text(re.compile(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}")).first
-    texto = locator.inner_text().strip()
-    return datetime.strptime(texto, "%d/%m/%Y %H:%M:%S")
+    # Power BI renderiza esse texto via SVG — Locator.inner_text() direto no nó específico
+    # falha com "Node is not an HTMLElement" (confirmado via execução real). Em vez de
+    # tentar ler o nó exato, pega o texto inteiro do <body> do iframe (isso funciona,
+    # <body> é um HTMLElement de verdade) e extrai a data por regex — mesma técnica
+    # robusta usada em ler_cards_mensais().
+    texto_completo = frame.locator("body").inner_text()
+    m = re.search(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}", texto_completo)
+    if not m:
+        raise RuntimeError(
+            f"Não achei o texto de 'Última Atualização' na página. Texto: {texto_completo[:500]!r}"
+        )
+    return datetime.strptime(m.group(0), "%d/%m/%Y %H:%M:%S")
 
 
 def clicar_toggle(frame, rotulo: str):
