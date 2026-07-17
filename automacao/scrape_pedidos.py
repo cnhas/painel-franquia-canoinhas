@@ -64,18 +64,21 @@ def login_painel(page):
 
 
 def esperar_carregamento(page):
-    """A página usa um overlay global (#global-loading-overlay) pra indicar requisições AJAX
-    em andamento. Espera ele aparecer (se for aparecer) e depois sumir, garantindo que a
-    tabela já reflete a última ação (filtro de data, troca de página, etc.) antes de seguir.
-    Sem isso, duas ações em sequência rápida (ex: clicar 'Hoje' e já trocar o 'resultados por
-    página') podem disparar duas requisições que se sobrepõem, e a que responde por último
-    'vence' — não necessariamente a mais recente pedida."""
-    overlay = page.locator("#global-loading-overlay")
-    try:
-        overlay.wait_for(state="visible", timeout=2000)
-    except PlaywrightTimeoutError:
-        pass  # requisição pode ter sido rápida demais pra pegar o overlay aparecendo
-    overlay.wait_for(state="hidden", timeout=NAV_TIMEOUT_MS)
+    """A página usa overlays de carregamento pra indicar requisições AJAX em andamento —
+    identificados dois até agora: #global-loading-overlay e #wait (esse segundo causou uma
+    falha real: ficou visível bloqueando cliques por 45s inteiros numa execução, mesmo já
+    esperando o primeiro sumir). Espera cada um aparecer (se for aparecer) e depois sumir,
+    garantindo que a página terminou de reagir à última ação antes de seguir."""
+    for seletor in ("#global-loading-overlay", "#wait"):
+        overlay = page.locator(seletor)
+        try:
+            overlay.wait_for(state="visible", timeout=2000)
+        except PlaywrightTimeoutError:
+            pass  # requisição pode ter sido rápida demais pra pegar o overlay aparecendo
+        try:
+            overlay.wait_for(state="hidden", timeout=NAV_TIMEOUT_MS)
+        except PlaywrightTimeoutError:
+            pass  # esse overlay específico pode não existir nessa página — não trava por isso
 
 
 def selecionar_100_por_pagina(page):
