@@ -31,10 +31,20 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar dependências
-        run: |
-          pip install playwright
-          playwright install --with-deps chromium
+      - name: Cache do navegador Playwright (Chromium)
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}
+
+      - name: Instalar dependências Python
+        run: pip install playwright
+
+      - name: Instalar navegador + libs do sistema (Playwright)
+        # --with-deps sempre roda (libs do sistema não dá pra cachear numa VM efêmera),
+        # mas se o binário do Chromium já estiver no cache, pula o download dele.
+        run: playwright install --with-deps chromium
 
       - name: Coletar pedidos e atualizar arquivos
         env:
@@ -42,12 +52,23 @@ jobs:
           PAINEL_SENHA: ${{ secrets.PAINEL_SENHA }}
         run: python automacao/scrape_pedidos.py
 
+      - name: Cache do Netlify CLI
+        id: cache-netlify-cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm-global
+          key: netlify-cli-${{ runner.os }}
+
       - name: Publicar no Netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          npm install -g netlify-cli
+          mkdir -p ~/.npm-global
+          npm config set prefix "$HOME/.npm-global"
+          echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.npm-global/bin:$PATH"
+          command -v netlify >/dev/null 2>&1 || npm install -g netlify-cli
           netlify deploy --prod --dir=. --site="$NETLIFY_SITE_ID"
 
       - name: Commitar mudanças de volta pro repositório
