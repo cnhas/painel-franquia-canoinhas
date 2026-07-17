@@ -22,7 +22,7 @@ on:
 jobs:
   atualizar:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
