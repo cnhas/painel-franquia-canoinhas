@@ -96,9 +96,12 @@ def login_datamuch(page):
 def obter_frame_relatorio(page):
     page.goto(DATAMUCH_URL_RELATORIO, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
     frame = page.frame_locator("iframe").first
-    # Espera algo do conteúdo real do relatório aparecer (não só o iframe existir).
+    # O embed (tipo Zoho Analytics) demora bem mais que uma página normal pra carregar e
+    # calcular os relatórios, principalmente numa sessão nova/fria — timeout bem mais
+    # generoso que o resto do script (confirmado necessário: 45s não foi suficiente na
+    # primeira tentativa real).
     frame.get_by_text(re.compile(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}")).first.wait_for(
-        state="visible", timeout=NAV_TIMEOUT_MS
+        state="visible", timeout=90000
     )
     return frame
 
@@ -109,23 +112,6 @@ def ler_ultima_atualizacao(frame) -> datetime:
     return datetime.strptime(texto, "%d/%m/%Y %H:%M:%S")
 
 
-def numero_por_indice(frame, rotulo: str, indice: int, tipo: str = "valor") -> float:
-    """Acha a N-ésima ocorrência (0-indexed, ordem visual esquerda->direita / topo->baixo)
-    de um rótulo de texto e extrai o número no bloco pai dele. Rótulos como 'Realizado'
-    ou '% MoM' se repetem em vários cards, por isso o índice posicional."""
-    loc = frame.get_by_text(rotulo, exact=True).nth(indice)
-    loc.wait_for(state="visible", timeout=NAV_TIMEOUT_MS)
-    bloco = loc.locator("..").inner_text()
-    if tipo == "valor":
-        m = re.search(r"-?R\$\s?[\d.,]+", bloco)
-    else:
-        m = re.search(r"-?[\d.,]+\s?%", bloco)
-    if not m:
-        raise RuntimeError(f"Não achei número perto do rótulo '{rotulo}' (índice {indice}): {bloco!r}")
-    texto = m.group(0)
-    return parse_pct(texto) if tipo == "pct" else parse_valor_brl(texto)
-
-
 def clicar_toggle(frame, rotulo: str):
     frame.get_by_role("button", name=re.compile(rotulo, re.I)).click(timeout=NAV_TIMEOUT_MS)
     frame.get_by_text(re.compile(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}")).first.wait_for(
@@ -133,58 +119,79 @@ def clicar_toggle(frame, rotulo: str):
     )
 
 
+def ler_cards_mensais(frame) -> dict:
+    """Lê os 5 cards de métricas por POSIÇÃO (não por rótulo de texto), já que vários
+    rótulos se repetem entre cards (ex: 'Realizado' aparece em 2 cards, '% YoY' em 3).
+    Ordem confirmada visualmente em 17/07/2026 (screenshot real), esquerda->direita:
+
+      [GMV]            R$ valor / "Realizado" / pct "% MoM" / pct "% YoY"
+      [Média GMV/Dia]  R$ valor / "Realizado" / pct "% MoM" / pct "% YoY"
+      [GMV Projetado]  R$ valor / "GMV Projetado" / pct "% MoM" / pct "% YoY"
+      [Meta]           R$ valor / "Meta" / R$ valor "Meta até ontem" / pct "% Realizado até ontem"
+      [Acumulado]      R$ valor / "GMV até ontem" / R$ valor "GMV ano anterior" / pct "% YoY"
+
+    Ou seja, em ordem: 7 valores em R$ e 8 percentuais. Extrai tudo de uma vez via regex
+    sobre o texto puro da região dos cards (mais robusto que tentar mapear rótulo por
+    rótulo, que falha quando o texto se repete)."""
+    texto_completo = frame.locator("body").inner_text()
+    # Corta antes de "Meta do Mês" (o gráfico de velocímetro logo abaixo dos cards também
+    # tem números em R$ que atrapalhariam a extração se fossem incluídos).
+    corte = texto_completo.split("Meta do Mês")[0]
+    valores_rs = [parse_valor_brl(v) for v in re.findall(r"-?R\$\s?[\d.,]+", corte)]
+    valores_pct = [parse_pct(v) for v in re.findall(r"-?[\d.,]+\s?%", corte)]
+    if len(valores_rs) < 7 or len(valores_pct) < 8:
+        raise RuntimeError(
+            f"Esperava >=7 valores em R$ e >=8 percentuais nos cards, achei "
+            f"{len(valores_rs)} e {len(valores_pct)}. Texto lido: {corte[:1000]!r}"
+        )
+    return {
+        "realizado_mes": valores_rs[0],
+        "mom_pct": valores_pct[0],
+        "yoy_pct": valores_pct[1],
+        "media_dia": valores_rs[1],
+        "projetado_mes": valores_rs[2],
+        "meta_mes": valores_rs[3],
+        "meta_ate_ontem": valores_rs[4],
+        "pct_realizado_ate_ontem": valores_pct[6],
+        "acumulado_ano": valores_rs[5],
+        "ano_anterior": valores_rs[6],
+        "yoy_ano_pct": valores_pct[7],
+    }
+
+
 def coletar_contexto(frame) -> dict:
     """Coleta os campos de contexto_mensal, primeiro na visão GMV, depois trocando pra
     visão Pedidos."""
-    # --- Visão GMV (já é a padrão ao abrir o relatório) ---
-    gmv_realizado_mes = numero_por_indice(frame, "Realizado", 0, "valor")
-    gmv_mom_pct = numero_por_indice(frame, "% MoM", 0, "pct")
-    gmv_yoy_pct = numero_por_indice(frame, "% YoY", 0, "pct")
-    media_gmv_dia = numero_por_indice(frame, "Realizado", 1, "valor")
-    # "GMV Projetado" e "Meta" não têm rótulo "Realizado" — pega pelo cabeçalho do card.
-    gmv_projetado_mes = numero_por_indice(frame, "GMV Projetado", 0, "valor")
-    meta_mes = numero_por_indice(frame, "Meta", 0, "valor")
-    meta_ate_ontem = numero_por_indice(frame, "Meta até ontem", 0, "valor")
-    pct_realizado_ate_ontem = numero_por_indice(frame, "% Realizado até ontem", 0, "pct")
-    gmv_acumulado_ano = numero_por_indice(frame, "Acumulado", 0, "valor")
-    gmv_ate_ontem_ano = numero_por_indice(frame, "GMV ano anterior", 0, "valor")
-    gmv_yoy_ano_pct = numero_por_indice(frame, "% YoY", 2, "pct")
+    gmv = ler_cards_mensais(frame)
 
     # --- Troca pra visão Pedidos ---
     clicar_toggle(frame, "Pedidos")
-    pedidos_realizado_mes = int(numero_por_indice(frame, "Realizado", 0, "valor"))
-    media_pedidos_dia = int(numero_por_indice(frame, "Realizado", 1, "valor"))
-    pedidos_projetado_mes = int(numero_por_indice(frame, "GMV Projetado", 0, "valor"))
-    meta_pedidos_mes = int(numero_por_indice(frame, "Meta", 0, "valor"))
-    meta_pedidos_ate_ontem = int(numero_por_indice(frame, "Meta até ontem", 0, "valor"))
-    pct_pedidos_realizado_ate_ontem = numero_por_indice(frame, "% Realizado até ontem", 0, "pct")
-    pedidos_acumulado_ano = int(numero_por_indice(frame, "Acumulado", 0, "valor"))
-    pedidos_yoy_ano_pct = numero_por_indice(frame, "% YoY", 2, "pct")
+    pedidos = ler_cards_mensais(frame)
     # Volta pra visão GMV (deixa a UI como estava, por precaução).
     clicar_toggle(frame, "GMV")
 
     return {
         "mes_referencia": datetime.now(BR_TZ).strftime("%Y-%m"),
         "atualizado_em": datetime.now(BR_TZ).strftime("%Y-%m-%dT%H:%M:%S"),
-        "gmv_realizado_mes": round(gmv_realizado_mes, 2),
-        "gmv_mom_pct": gmv_mom_pct,
-        "gmv_yoy_pct": gmv_yoy_pct,
-        "media_gmv_dia": round(media_gmv_dia, 2),
-        "gmv_projetado_mes": round(gmv_projetado_mes),
-        "meta_mes": round(meta_mes),
-        "meta_ate_ontem": round(meta_ate_ontem),
-        "pct_realizado_ate_ontem": pct_realizado_ate_ontem,
-        "gmv_acumulado_ano": round(gmv_acumulado_ano, 2),
-        "gmv_ate_ontem_ano": round(gmv_ate_ontem_ano, 2),
-        "gmv_yoy_ano_pct": gmv_yoy_ano_pct,
-        "pedidos_realizado_mes": pedidos_realizado_mes,
-        "media_pedidos_dia": media_pedidos_dia,
-        "pedidos_projetado_mes": pedidos_projetado_mes,
-        "meta_pedidos_mes": meta_pedidos_mes,
-        "meta_pedidos_ate_ontem": meta_pedidos_ate_ontem,
-        "pct_pedidos_realizado_ate_ontem": pct_pedidos_realizado_ate_ontem,
-        "pedidos_acumulado_ano": pedidos_acumulado_ano,
-        "pedidos_yoy_ano_pct": pedidos_yoy_ano_pct,
+        "gmv_realizado_mes": round(gmv["realizado_mes"], 2),
+        "gmv_mom_pct": gmv["mom_pct"],
+        "gmv_yoy_pct": gmv["yoy_pct"],
+        "media_gmv_dia": round(gmv["media_dia"], 2),
+        "gmv_projetado_mes": round(gmv["projetado_mes"]),
+        "meta_mes": round(gmv["meta_mes"]),
+        "meta_ate_ontem": round(gmv["meta_ate_ontem"]),
+        "pct_realizado_ate_ontem": gmv["pct_realizado_ate_ontem"],
+        "gmv_acumulado_ano": round(gmv["acumulado_ano"], 2),
+        "gmv_ate_ontem_ano": round(gmv["ano_anterior"], 2),
+        "gmv_yoy_ano_pct": gmv["yoy_ano_pct"],
+        "pedidos_realizado_mes": int(pedidos["realizado_mes"]),
+        "media_pedidos_dia": int(pedidos["media_dia"]),
+        "pedidos_projetado_mes": int(pedidos["projetado_mes"]),
+        "meta_pedidos_mes": int(pedidos["meta_mes"]),
+        "meta_pedidos_ate_ontem": int(pedidos["meta_ate_ontem"]),
+        "pct_pedidos_realizado_ate_ontem": pedidos["pct_realizado_ate_ontem"],
+        "pedidos_acumulado_ano": int(pedidos["acumulado_ano"]),
+        "pedidos_yoy_ano_pct": pedidos["yoy_ano_pct"],
     }
 
 
