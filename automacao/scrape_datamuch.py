@@ -310,7 +310,13 @@ def _diagnosticar_erro(page):
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
+        # IMPORTANTE: o relatório é um embed do Power BI, e o Power BI formata datas e
+        # números de acordo com o locale do navegador. Descoberto via execução real:
+        # sem isso, uma sessão nova do Chromium (locale padrão en-US) mostra
+        # "7/16/2026 8:54:57 AM" e "R$ 226,249.15" em vez de "16/07/2026 08:54:57" e
+        # "R$ 226.249,15" — quebrando todos os regex escritos pro formato brasileiro.
+        context = browser.new_context(locale="pt-BR", timezone_id="America/Sao_Paulo")
+        page = context.new_page()
         page.set_default_timeout(NAV_TIMEOUT_MS)
         try:
             login_datamuch(page)
