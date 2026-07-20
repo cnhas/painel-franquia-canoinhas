@@ -1,0 +1,67 @@
+# Workflow pra rodar correções pontuais nos dados (scripts em automacao/corrigir_*.py) —
+# só roda manualmente (workflow_dispatch), nunca em horário agendado. Existe porque o
+# sandbox usado pelo Claude não tem acesso de rede pro GitHub (só o navegador tem), então
+# scripts de correção de dados precisam rodar aqui, num runner do GitHub Actions, que tem
+# rede completa.
+
+name: Corrigir dados (manual)
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: "Nome do script em automacao/ pra rodar (ex: corrigir_gmv_diario.py)"
+        required: true
+        default: "corrigir_gmv_diario.py"
+
+jobs:
+  corrigir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Rodar script de correção
+        run: python automacao/${{ inputs.script }}
+
+      - name: Commitar mudanças de volta pro repositório
+        run: |
+          git config user.name "correcao-bot"
+          git config user.email "correcao-bot@users.noreply.github.com"
+          git add index.html historico_vendas.json
+          git diff --cached --quiet || git commit -m "Correção manual de dados: ${{ inputs.script }}"
+          git pull --rebase origin main
+          git push
+
+      - name: Preparar pasta de publicação
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp historico_vendas.json _site/ 2>/dev/null || true
+
+      - name: Preparar artefato pro GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
