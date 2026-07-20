@@ -145,13 +145,13 @@
     "novo_dia_detectado": false
   },
   "pedidos_ao_vivo_hoje": {
-    "data": "2026-07-18",
-    "checado_em": "20:39",
+    "data": "2026-07-20",
+    "checado_em": "14:04",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 226,
-    "cancelados": 10,
-    "pct_cancelados": 4.4,
-    "gmv_total": 9507.76,
-    "gmv_valido": 7830.51
+    "pedidos_totais": 43,
+    "cancelados": 2,
+    "pct_cancelados": 4.7,
+    "gmv_total": 1906.36,
+    "gmv_valido": 1850.1
   }
 }
