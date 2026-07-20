@@ -281,18 +281,51 @@ def ler_cards_cupons(frame) -> dict:
 
     # "Cupons por categoria" e "Uso de Cupons" são gráficos de barra do Power
     # BI — os rótulos/valores das barras são desenhados como <text> dentro de
-    # um <svg>, e elementos SVG NÃO entram no inner_text() do body (só texto
-    # HTML normal entra). Por isso a tentativa anterior (buscar essas strings
-    # dentro do texto do body) sempre dava bloco "achado" mas vazio. Em vez
-    # disso, lê os <text> de dentro do <svg> de cada gráfico diretamente.
+    # um <svg>. DUAS descobertas reais (sessão de 20/07/2026):
+    #   1) elementos SVG não entram no inner_text() do body (só texto HTML
+    #      normal entra) — por isso a 1ª tentativa (buscar strings no texto
+    #      do body) sempre dava bloco "achado" mas vazio.
+    #   2) ler cada <text> via Locator.all_inner_texts() (que faz uma
+    #      chamada por elemento) deu uma lista do tamanho certo mas cheia de
+    #      None — os nós do SVG do Power BI são recriados/re-renderizados o
+    #      tempo todo, então por volta da 2ª chamada da rodada em lote o nó
+    #      já tinha sido substituído (referência "solta"). A correção é ler
+    #      tudo de uma vez só, com uma única chamada JS atômica (evaluate),
+    #      sem round-trips intermediários que dão brecha pro Power BI trocar
+    #      os nós no meio do caminho.
     categorias = []
     usos = []
     try:
-        todos_svg_texts = frame.locator("svg text").all_inner_texts()
-        print(f"[debug ler_cards_cupons] todos os textos de <svg text> na página ({len(todos_svg_texts)}): {todos_svg_texts!r}")
+        dados_graficos = frame.locator("body").evaluate(
+            """() => {
+                function acharContainer(rotulo) {
+                    const candidatos = Array.from(document.querySelectorAll('*'))
+                        .filter(el => el.children.length === 0 && el.textContent && el.textContent.trim() === rotulo);
+                    for (const el of candidatos) {
+                        let node = el;
+                        for (let i = 0; i < 10 && node; i++) {
+                            if (node.querySelector && node.querySelector('svg text')) return node;
+                            node = node.parentElement;
+                        }
+                    }
+                    return null;
+                }
+                function textosDe(container) {
+                    if (!container) return [];
+                    return Array.from(container.querySelectorAll('svg text')).map(t => t.textContent);
+                }
+                return {
+                    categoria: textosDe(acharContainer('Cupons por categoria')),
+                    uso: textosDe(acharContainer('Uso de Cupons')),
+                };
+            }"""
+        )
     except Exception as e:
-        todos_svg_texts = []
-        print(f"[debug ler_cards_cupons] não consegui ler <svg text>: {e}")
+        dados_graficos = {"categoria": [], "uso": []}
+        print(f"[debug ler_cards_cupons] falha no evaluate dos gráficos: {e}")
+
+    print(f"[debug ler_cards_cupons] svg text (via evaluate) 'Cupons por categoria': {dados_graficos.get('categoria')!r}")
+    print(f"[debug ler_cards_cupons] svg text (via evaluate) 'Uso de Cupons': {dados_graficos.get('uso')!r}")
 
     def _extrair_pares_categoria_valor(rotulos: list) -> list:
         """A partir de uma lista plana de rótulos de eixo/valores de barra
@@ -302,7 +335,8 @@ def ler_cards_cupons(frame) -> dict:
         pares = []
         i = 0
         while i < len(rotulos) - 1:
-            atual, proximo = rotulos[i].strip(), rotulos[i + 1].strip()
+            atual = (rotulos[i] or "").strip()
+            proximo = (rotulos[i + 1] or "").strip()
             if atual and not re.match(r"^[\d.,]+$", atual) and re.match(r"^[\d.,]+$", proximo):
                 pares.append((atual, int(parse_valor_brl(proximo))))
                 i += 2
@@ -310,43 +344,8 @@ def ler_cards_cupons(frame) -> dict:
                 i += 1
         return pares
 
-    try:
-        container_cat = frame.locator(
-            "text=Cupons por categoria"
-        ).first.locator("xpath=ancestor::*[self::div][1]")
-        # Sobe até achar um ancestral que já contenha um <svg> dentro (o
-        # "visual container" do Power BI) — tenta alguns níveis.
-        svg_texts_cat = []
-        for _ in range(6):
-            try:
-                svg_texts_cat = container_cat.locator("svg text").all_inner_texts()
-                if svg_texts_cat:
-                    break
-            except Exception:
-                pass
-            container_cat = container_cat.locator("xpath=..")
-        print(f"[debug ler_cards_cupons] svg text dentro do container 'Cupons por categoria' ({len(svg_texts_cat)}): {svg_texts_cat!r}")
-        categorias = [{"categoria": c, "qtd": v} for c, v in _extrair_pares_categoria_valor(svg_texts_cat)]
-    except Exception as e:
-        print(f"[debug ler_cards_cupons] falha ao extrair 'Cupons por categoria': {e}")
-
-    try:
-        container_uso = frame.locator(
-            "text=Uso de Cupons"
-        ).first.locator("xpath=ancestor::*[self::div][1]")
-        svg_texts_uso = []
-        for _ in range(6):
-            try:
-                svg_texts_uso = container_uso.locator("svg text").all_inner_texts()
-                if svg_texts_uso:
-                    break
-            except Exception:
-                pass
-            container_uso = container_uso.locator("xpath=..")
-        print(f"[debug ler_cards_cupons] svg text dentro do container 'Uso de Cupons' ({len(svg_texts_uso)}): {svg_texts_uso!r}")
-        usos = [{"codigo": c, "pedidos": v} for c, v in _extrair_pares_categoria_valor(svg_texts_uso)]
-    except Exception as e:
-        print(f"[debug ler_cards_cupons] falha ao extrair 'Uso de Cupons': {e}")
+    categorias = [{"categoria": c, "qtd": v} for c, v in _extrair_pares_categoria_valor(dados_graficos.get("categoria", []))]
+    usos = [{"codigo": c, "pedidos": v} for c, v in _extrair_pares_categoria_valor(dados_graficos.get("uso", []))]
 
     return {
         "pedidos_cupom": int(parse_valor_brl(m_pedidos.group(1))),
