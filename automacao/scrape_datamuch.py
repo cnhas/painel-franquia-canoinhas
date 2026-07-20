@@ -147,18 +147,40 @@ def ler_cards_mensais(frame) -> dict:
       [Meta]           R$ valor / "Meta" / R$ valor "Meta até ontem" / pct "% Realizado até ontem"
       [Acumulado]      R$ valor / "GMV até ontem" / R$ valor "GMV ano anterior" / pct "% YoY"
 
-    Ou seja, em ordem: 7 valores em R$ e 8 percentuais. Extrai tudo de uma vez via regex
-    sobre o texto puro da região dos cards (mais robusto que tentar mapear rótulo por
-    rótulo, que falha quando o texto se repete)."""
+    Ou seja, em ordem: 7 valores "principais" e 8 percentuais. Extrai tudo de uma vez via
+    regex sobre o texto puro da região dos cards (mais robusto que tentar mapear rótulo
+    por rótulo, que falha quando o texto se repete).
+
+    IMPORTANTE (descoberto via execução real de 20/07/2026, testando a visão "Pedidos"
+    pela primeira vez): na visão GMV os 7 valores principais vêm como "R$ 1.234,56", mas
+    na visão PEDIDOS os mesmos 7 valores vêm como números simples "4.152" / "218" (sem
+    "R$", já que são contagem de pedidos, não dinheiro) — então a regex de R$ sozinha
+    achava 0 valores e a função quebrava. Corrigido pra: 1) cortar o texto ANTES de
+    "Resultados" também (não só depois de "Meta do Mês"), removendo o texto de filtros/
+    data do topo que também tem números soltos e poderia contaminar a extração da visão
+    Pedidos; 2) se não achar "R$", cair pro formato de número simples (com separador de
+    milhar brasileiro) nos números que sobram depois de remover os percentuais."""
     texto_completo = frame.locator("body").inner_text()
+    # "Resultados" aparece logo antes dos cards em ambas as visões — corta antes disso pra
+    # não pegar números soltos do cabeçalho (data de "Última Atualização", filtros).
+    corte = texto_completo.split("Resultados", 1)[-1]
     # Corta antes de "Meta do Mês" (o gráfico de velocímetro logo abaixo dos cards também
-    # tem números em R$ que atrapalhariam a extração se fossem incluídos).
-    corte = texto_completo.split("Meta do Mês")[0]
-    valores_rs = [parse_valor_brl(v) for v in re.findall(r"-?R\$\s?[\d.,]+", corte)]
+    # tem números que atrapalhariam a extração se fossem incluídos).
+    corte = corte.split("Meta do Mês")[0]
     valores_pct = [parse_pct(v) for v in re.findall(r"-?[\d.,]+\s?%", corte)]
+
+    valores_rs_str = re.findall(r"-?R\$\s?[\d.,]+", corte)
+    if valores_rs_str:
+        valores_rs = [parse_valor_brl(v) for v in valores_rs_str]
+    else:
+        # Visão Pedidos: sem "R$". Remove os percentuais do texto primeiro (pra não
+        # confundir "4,6%" com um valor principal) e extrai os números simples restantes.
+        sem_pct = re.sub(r"-?[\d.,]+\s?%", "", corte)
+        valores_rs = [parse_valor_brl(v) for v in re.findall(r"-?\d[\d.]*\d|-?\d", sem_pct)]
+
     if len(valores_rs) < 7 or len(valores_pct) < 8:
         raise RuntimeError(
-            f"Esperava >=7 valores em R$ e >=8 percentuais nos cards, achei "
+            f"Esperava >=7 valores principais e >=8 percentuais nos cards, achei "
             f"{len(valores_rs)} e {len(valores_pct)}. Texto lido: {corte[:1000]!r}"
         )
     return {
