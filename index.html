@@ -288,36 +288,322 @@ const dataStore = {
     "variacao_pct": 52.19
   },
   "dias": [
-    {
-      "data": "2026-07-15",
-      "gmv_dia": 12153.49,
-      "meta_dia": 13306,
-      "pedidos_cupom": 58,
-      "gmv_cupom": 3808.62,
-      "desconto_total": 368.47,
-      "ticket_medio_cupom": 65.67,
-      "gmv_por_cupom": 10.34,
-      "lojas_unicas_cupom": 34,
-      "painel": {
-        "pedidos_totais": 202,
-        "cancelados": 19,
-        "pct_cancelados": 9.4,
-        "entrega": 161,
-        "retirada": 41,
-        "fonte": "Painel > Histórico (autoritativo)"
+  {
+    "data": "2026-07-15",
+    "gmv_dia": 12153.49,
+    "meta_dia": 13306,
+    "pedidos_cupom": 58,
+    "gmv_cupom": 3808.62,
+    "desconto_total": 368.47,
+    "ticket_medio_cupom": 65.67,
+    "gmv_por_cupom": 10.34,
+    "lojas_unicas_cupom": 34,
+    "painel": {
+      "pedidos_totais": 202,
+      "cancelados": 19,
+      "pct_cancelados": 9.4,
+      "entrega": 161,
+      "retirada": 41,
+      "fonte": "Painel > Histórico (autoritativo)"
+    },
+    "ofertas_de_por": {
+      "itens_vendidos": 67,
+      "gmv_produtos": 3461,
+      "subsidio_franquia": 44.05,
+      "subsidio_loja": 1649,
+      "subsidio_dm": 63,
+      "destaques": [
+        "Combos de pizza + refrigerante",
+        "X-Salada + Coca-Cola Lata",
+        "Combos de burguer (Fredie's, Machado)"
+      ]
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 830.78,
+        "pedidos": 12
       },
-      "ofertas_de_por": {
-        "itens_vendidos": 67,
-        "gmv_produtos": 3461,
-        "subsidio_franquia": 44.05,
-        "subsidio_loja": 1649,
-        "subsidio_dm": 63,
-        "destaques": [
-          "Combos de pizza + refrigerante",
-          "X-Salada + Coca-Cola Lata",
-          "Combos de burguer (Fredie's, Machado)"
-        ]
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 570.7,
+        "pedidos": 6
       },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 521.5,
+        "pedidos": 5
+      },
+      {
+        "nome": "Garden Hamburgueria e Bistro",
+        "gmv": 391.37,
+        "pedidos": 5
+      },
+      {
+        "nome": "Mietta Café",
+        "gmv": 391.3,
+        "pedidos": 7
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 319.9,
+        "pedidos": 3
+      },
+      {
+        "nome": "Big X-Costela Pioneiro Desde 2016",
+        "gmv": 214.0,
+        "pedidos": 3
+      },
+      {
+        "nome": "MasterPizza Delivery - Campo da Água Verde",
+        "gmv": 167.85,
+        "pedidos": 3
+      },
+      {
+        "nome": "Burger Flex Hamburgueria",
+        "gmv": 160.5,
+        "pedidos": 3
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 146.89,
+        "pedidos": 5
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 830.78,
+        "pedidos": 12
+      },
+      {
+        "nome": "Mietta Café",
+        "gmv": 391.3,
+        "pedidos": 7
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 570.7,
+        "pedidos": 6
+      },
+      {
+        "nome": "Garden Hamburgueria e Bistro",
+        "gmv": 391.37,
+        "pedidos": 5
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 521.5,
+        "pedidos": 5
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 146.89,
+        "pedidos": 5
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 319.9,
+        "pedidos": 3
+      },
+      {
+        "nome": "Big X-Costela Pioneiro Desde 2016",
+        "gmv": 214.0,
+        "pedidos": 3
+      },
+      {
+        "nome": "MasterPizza Delivery - Campo da Água Verde",
+        "gmv": 167.85,
+        "pedidos": 3
+      },
+      {
+        "nome": "Burger Flex Hamburgueria",
+        "gmv": 160.5,
+        "pedidos": 3
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 46
+      },
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 4
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 4
+      },
+      {
+        "codigo": "GOLEIRO",
+        "pedidos": 2
+      },
+      {
+        "codigo": "BIONDI",
+        "pedidos": 2
+      }
+    ],
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 52
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 30
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 28
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 24
+      },
+      {
+        "categoria": "Combão com Desconto",
+        "qtd": 21
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 21
+      }
+    ],
+    "pendencias": [
+      "Ranking de lojas por GMV/pedidos vem da aba 'Geral' do Data Much, que é parcial frente ao Painel (validado: soma de pedidos dessa aba ≈ 85 vs. 202 reais no Painel)",
+      "Lojas cadastradas por campanha ainda não localizado no Data Much — precisa perguntar ao suporte Delivery Much"
+    ]
+  },
+  {
+    "data": "2026-07-19",
+    "pedidos_cupom": 89,
+    "gmv_cupom": 10.12,
+    "desconto_total": 737.91,
+    "ticket_medio_cupom": 83.94,
+    "gmv_por_cupom": 10.12,
+    "lojas_unicas_cupom": 38,
+    "cupons_categoria": [],
+    "cupons_uso": [],
+    "ofertas_de_por": {
+      "itens_vendidos": 48,
+      "subsidio_dm": 159.0,
+      "subsidio_franquia": 85.5,
+      "subsidio_loja": 539.91,
+      "gmv_produtos": 2614.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Bavaria Lanches,a",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Salapot Food",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "King's Pizza",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Chef Burguer Grill",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Cantinho do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Laudecir Maciel Carnes",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Fast Food Rotatória Costela Burguer",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Trailer Alto do Mussi",
+        "gmv": 0.0,
+        "pedidos": 0
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Bavaria Lanches,a",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Salapot Food",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "King's Pizza",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Chef Burguer Grill",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Cantinho do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Laudecir Maciel Carnes",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Fast Food Rotatória Costela Burguer",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Trailer Alto do Mussi",
+        "gmv": 0.0,
+        "pedidos": 0
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much."
+    ],
+    "gmv_dia": 18339.61,
+    "meta_dia": 18314
+  }
+]},
       "top_lojas_gmv": [
         {
           "nome": "Top'z Burger",
