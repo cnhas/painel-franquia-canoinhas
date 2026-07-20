@@ -155,72 +155,33 @@ def abrir_painel_filtro(frame):
     raise RuntimeError(f"Não consegui abrir o painel de filtro por nenhuma estratégia. Último erro: {ultimo_erro}")
 
 
-def _clicar_dia_no_calendario(frame, dia: date, tentativas_navegacao: int = 6):
-    """Assume que um calendário mensal já está aberto (depois de clicar num campo
-    de data). Confirma o mês/ano visível e navega se necessário, depois clica no
-    número do dia. Retorna True se conseguiu clicar."""
-    nome_mes_alvo = MESES_PT[dia.month - 1]
-    cabecalho_re = re.compile(
-        r"^(" + "|".join(MESES_PT) + r") \d{4}$", re.IGNORECASE
-    )
-    for _ in range(tentativas_navegacao):
-        cabecalho = frame.get_by_text(cabecalho_re).first
-        texto_cabecalho = cabecalho.inner_text(timeout=NAV_TIMEOUT_MS).strip().lower()
-        if texto_cabecalho == f"{nome_mes_alvo} {dia.year}":
-            break
-        # Ainda não é o mês certo — usa a seta de "próximo mês" (tooltip
-        # "Próximo mês", confirmado via observação real) pra avançar, ou
-        # "Mês anterior" pra voltar, comparando ano/mês numericamente.
-        partes = texto_cabecalho.split()
-        try:
-            mes_atual_idx = MESES_PT.index(partes[0]) + 1
-            ano_atual = int(partes[1])
-        except (ValueError, IndexError):
-            break
-        alvo_num = dia.year * 12 + dia.month
-        atual_num = ano_atual * 12 + mes_atual_idx
-        seta = '[title="Próximo mês"]' if alvo_num > atual_num else '[title="Mês anterior"]'
-        frame.locator(seta).first.click(timeout=NAV_TIMEOUT_MS)
-        frame.wait_for_timeout(500)
-    else:
-        return False
-
-    # Clica no número do dia. Usa exact=True pra não confundir "1" com "10", "11"
-    # etc. Se houver mais de uma ocorrência visível (dias de mês adjacente
-    # esmaecidos com o mesmo número), pega a que estiver dentro da grade do mês
-    # certo checando se está "enabled"/clicável — na prática, .first costuma
-    # bastar pra dias no meio do mês (15-19), que raramente colidem com os dias
-    # esmaecidos do início/fim da grade.
-    alvo = frame.get_by_text(str(dia.day), exact=True)
-    alvo.first.click(timeout=NAV_TIMEOUT_MS)
-    return True
-
-
 def selecionar_dia_unico(frame, dia: date):
     """Abre o painel de filtro (se ainda não estiver aberto) e seleciona o campo
-    Data pra cobrir só o dia indicado (início = fim = dia)."""
+    Data pra cobrir só o dia indicado (início = fim = dia).
+
+    DESCOBERTA (execução real de 20/07/2026, via dump de aria-labels no
+    diagnóstico de erro): os campos de data do filtro NÃO são spans de texto
+    clicáveis que abrem um calendário visual pra clicar no dia — são inputs de
+    verdade com aria-label "Data de início. Intervalo de entrada disponível
+    ..." e "Data de término. Intervalo de entrada disponível ...". Dá pra
+    preencher direto com .fill(), sem precisar navegar calendário nenhum —
+    bem mais simples e confiável."""
     abrir_painel_filtro(frame)
 
-    # Os dois campos de data (início/fim) são os dois primeiros textos no
-    # padrão dd/mm/aaaa que aparecem depois do rótulo "Data" — confirmado via
-    # observação visual nos 3 relatórios (o painel de filtro fica sempre no
-    # topo/esquerda, antes da tabela principal na ordem de leitura).
-    padrao_data = re.compile(r"^\d{2}/\d{2}/\d{4}$")
-    campo_inicio = frame.get_by_text(padrao_data).nth(0)
-    campo_fim = frame.get_by_text(padrao_data).nth(1)
+    data_str = dia.strftime("%d/%m/%Y")
+    campo_inicio = frame.get_by_label(re.compile("Data de início", re.I)).first
+    campo_fim = frame.get_by_label(re.compile(r"Data de t[ée]rmino", re.I)).first
 
     campo_inicio.click(timeout=NAV_TIMEOUT_MS)
-    frame.wait_for_timeout(500)
-    ok1 = _clicar_dia_no_calendario(frame, dia)
-    if not ok1:
-        raise RuntimeError(f"Não consegui navegar o calendário (campo início) até {dia}.")
-    frame.wait_for_timeout(500)
+    campo_inicio.fill("")
+    campo_inicio.fill(data_str)
+    campo_inicio.press("Tab")
+    frame.wait_for_timeout(800)
 
     campo_fim.click(timeout=NAV_TIMEOUT_MS)
-    frame.wait_for_timeout(500)
-    ok2 = _clicar_dia_no_calendario(frame, dia)
-    if not ok2:
-        raise RuntimeError(f"Não consegui navegar o calendário (campo fim) até {dia}.")
+    campo_fim.fill("")
+    campo_fim.fill(data_str)
+    campo_fim.press("Tab")
     frame.wait_for_timeout(1500)
 
     # Fecha o painel de filtro. Confirmado que não existe botão "Aplicar"
