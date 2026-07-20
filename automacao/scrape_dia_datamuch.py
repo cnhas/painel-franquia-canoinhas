@@ -1,0 +1,495 @@
+"""
+Scraper de detalhe DIÁRIO — Data Much (Canoinhas/Três Barras)
+
+FASE 2 (este script): pra um dia específico já fechado no Data Much, coleta o
+detalhe completo que o painel mostra em "ver o dia" e escreve/atualiza a entrada
+correspondente no array `dias[]` de index.html e historico_vendas.json:
+
+  - Top 10 lojas por GMV e por pedidos (relatório "Acompanhamento de Lojas", /app/report/488)
+  - Uso de cupons, cupons por categoria, e métricas de cupom (relatório
+    "Acompanhamento de Cupons", /app/report/216)
+  - Ofertas De/Por: itens vendidos, GMV produtos, subsídios (relatório
+    "Ofertas De/Por", /app/report/434)
+
+NÃO coleta (por enquanto): dados do Painel (pedidos_totais/cancelados/entrega/
+retirada) — isso vem de um site totalmente diferente (panel.deliverymuch.com.br,
+já tratado em scrape_pedidos.py) e fica de fora desta primeira versão pra não
+inflar ainda mais o escopo. O campo "painel" da entrada do dia fica ausente
+quando este script cria/atualiza a entrada — dá pra completar numa próxima
+rodada.
+
+DESCOBERTA IMPORTANTE (sessão de 20/07/2026, validada manualmente comparando
+com os dados já salvos do dia 15/07 — bateram exato, centavo a centavo, nos 3
+relatórios): os 3 relatórios abaixo, quando filtrados pra um único dia (campo
+"Data" do painel de filtro = mesma data de início e fim), mostram exatamente
+os valores de UM dia:
+
+  - /app/report/488 "Acompanhamento de Lojas", aba "Geral": tabela com colunas
+    UF/cidade/empresa/.../"gmv (mês atual)"/"pedidos (mês atual)"/etc. Apesar do
+    nome da coluna dizer "mês atual", na prática ela reflete o filtro de Data
+    aplicado. Clicar no cabeçalho da coluna "gmv (mês atual)" ordena por esse
+    valor (2 cliques = decrescente, no teste manual). Top 10 dessa ordenação =
+    top_lojas_gmv. Repetir ordenando pela coluna de pedidos = top_lojas_pedidos.
+
+  - /app/report/216 "Acompanhamento de Cupons": mesmo filtro de Data, os cards
+    do topo (Pedidos, GMV, Desconto Total, Ticket Médio, GMV/Cupom, Lojas
+    Únicas) mapeiam direto pra pedidos_cupom/gmv_cupom/desconto_total/
+    ticket_medio_cupom/gmv_por_cupom/lojas_unicas_cupom. Os gráficos "Cupons
+    por categoria" e "Uso de Cupons" dão cupons_categoria[] e cupons_uso[].
+
+  - /app/report/434 "Ofertas De/Por": mesmo filtro de Data, os 4 cards do topo
+    (Itens, Subsídio DM, Subsídio Franquia, Subsídio Loja, GMV Produtos) —
+    ATENÇÃO: só tem esses 4-5 cards, sem "destaques" (produtos mais vendidos);
+    esse campo fica como lista vazia nesta versão.
+
+TODOS os 3 relatórios usam o mesmo padrão de filtro (confirmado manualmente):
+  1. Um ícone de funil na barra lateral esquerda do relatório, com atributo
+     title="Abrir opções de filtro", abre um painel de filtros.
+  2. Dentro do painel, um campo "Data" com dois textos no formato dd/mm/aaaa
+     (início e fim do intervalo) — clicar em qualquer um abre um calendário
+     mensal (dom/seg/ter/.../sáb, com um cabeçalho "mês aaaa" e setas
+     prev/próximo mês).
+  3. Clicar no número do dia desejado seleciona aquela data.
+  4. Repetir pro segundo campo (fim) com o MESMO dia — assim o intervalo vira
+     um único dia.
+  5. Fechar o painel (ícone "X") aplica o filtro (não tem botão "Aplicar"
+     separado — confirmado, os cards já atualizam sozinhos assim que os dois
+     campos têm valor).
+
+IMPORTANTE — este script foi escrito SEM conseguir inspecionar o DOM bruto de
+dentro do iframe (os relatórios são embeds cross-origin; nem accessibility tree
+nem `iframe.contentDocument` alcançam o conteúdo — só Playwright via
+frame_locator, que opera em nível de CDP e ignora a restrição de mesma
+origem). Os seletores de texto usados aqui foram desenhados a partir de
+observação visual real (screenshots), não de inspeção de DOM — é esperado
+precisar de pelo menos uma rodada de ajuste depois de rodar de verdade e
+revisar os screenshots de diagnóstico salvos em caso de erro (mesmo processo
+já usado pros outros scrapers deste projeto).
+
+Requisitos: pip install playwright && playwright install chromium
+Variáveis de ambiente: DATAMUCH_EMAIL, DATAMUCH_SENHA
+Argumento: uma ou mais datas YYYY-MM-DD (separadas por vírgula) na variável de
+ambiente DIAS_ALVO, ex: DIAS_ALVO=2026-07-16,2026-07-17,2026-07-18,2026-07-19
+"""
+
+import json
+import os
+import re
+import sys
+import time
+from datetime import date, datetime, timedelta
+from pathlib import Path
+
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError, Frame
+
+DATAMUCH_URL_LOGIN = "https://datamuch.deliverymuch.com.br/login"
+URL_LOJAS = "https://datamuch.deliverymuch.com.br/app/report/488"
+URL_CUPONS = "https://datamuch.deliverymuch.com.br/app/report/216"
+URL_OFERTAS = "https://datamuch.deliverymuch.com.br/app/report/434"
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+INDEX_HTML_PATH = REPO_ROOT / "index.html"
+HISTORICO_JSON_PATH = REPO_ROOT / "historico_vendas.json"
+
+NAV_TIMEOUT_MS = 45000
+
+MESES_PT = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+]
+
+
+def parse_valor_brl(texto: str) -> float:
+    limpo = re.sub(r"[^\d,.\-]", "", texto)
+    limpo = limpo.replace(".", "").replace(",", ".")
+    if limpo in ("", "-", "."):
+        return 0.0
+    return float(limpo)
+
+
+def login_datamuch(page):
+    page.goto(DATAMUCH_URL_LOGIN, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+    email = os.environ["DATAMUCH_EMAIL"]
+    senha = os.environ["DATAMUCH_SENHA"]
+    page.get_by_placeholder("E-mail").fill(email)
+    page.get_by_placeholder("Senha").fill(senha)
+    page.get_by_role("button", name=re.compile("entrar", re.I)).click()
+    page.wait_for_url(lambda url: "/login" not in url, timeout=NAV_TIMEOUT_MS)
+
+
+def obter_frame(page, url: str) -> Frame:
+    page.goto(url, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+    frame = page.frame_locator("iframe").first
+    # Espera algo renderizar de verdade dentro do iframe antes de seguir.
+    frame.locator("body").wait_for(state="visible", timeout=60000)
+    page.wait_for_timeout(2000)
+    return frame
+
+
+def abrir_painel_filtro(frame):
+    # Ícone de funil com tooltip nativo "Abrir opções de filtro" (confirmado via
+    # observação visual real em todos os 3 relatórios).
+    icone = frame.locator('[title="Abrir opções de filtro"]').first
+    icone.click(timeout=NAV_TIMEOUT_MS)
+    frame.get_by_text("Data", exact=True).first.wait_for(state="visible", timeout=NAV_TIMEOUT_MS)
+
+
+def _clicar_dia_no_calendario(frame, dia: date, tentativas_navegacao: int = 6):
+    """Assume que um calendário mensal já está aberto (depois de clicar num campo
+    de data). Confirma o mês/ano visível e navega se necessário, depois clica no
+    número do dia. Retorna True se conseguiu clicar."""
+    nome_mes_alvo = MESES_PT[dia.month - 1]
+    cabecalho_re = re.compile(
+        r"^(" + "|".join(MESES_PT) + r") \d{4}$", re.IGNORECASE
+    )
+    for _ in range(tentativas_navegacao):
+        cabecalho = frame.get_by_text(cabecalho_re).first
+        texto_cabecalho = cabecalho.inner_text(timeout=NAV_TIMEOUT_MS).strip().lower()
+        if texto_cabecalho == f"{nome_mes_alvo} {dia.year}":
+            break
+        # Ainda não é o mês certo — usa a seta de "próximo mês" (tooltip
+        # "Próximo mês", confirmado via observação real) pra avançar, ou
+        # "Mês anterior" pra voltar, comparando ano/mês numericamente.
+        partes = texto_cabecalho.split()
+        try:
+            mes_atual_idx = MESES_PT.index(partes[0]) + 1
+            ano_atual = int(partes[1])
+        except (ValueError, IndexError):
+            break
+        alvo_num = dia.year * 12 + dia.month
+        atual_num = ano_atual * 12 + mes_atual_idx
+        seta = '[title="Próximo mês"]' if alvo_num > atual_num else '[title="Mês anterior"]'
+        frame.locator(seta).first.click(timeout=NAV_TIMEOUT_MS)
+        frame.wait_for_timeout(500)
+    else:
+        return False
+
+    # Clica no número do dia. Usa exact=True pra não confundir "1" com "10", "11"
+    # etc. Se houver mais de uma ocorrência visível (dias de mês adjacente
+    # esmaecidos com o mesmo número), pega a que estiver dentro da grade do mês
+    # certo checando se está "enabled"/clicável — na prática, .first costuma
+    # bastar pra dias no meio do mês (15-19), que raramente colidem com os dias
+    # esmaecidos do início/fim da grade.
+    alvo = frame.get_by_text(str(dia.day), exact=True)
+    alvo.first.click(timeout=NAV_TIMEOUT_MS)
+    return True
+
+
+def selecionar_dia_unico(frame, dia: date):
+    """Abre o painel de filtro (se ainda não estiver aberto) e seleciona o campo
+    Data pra cobrir só o dia indicado (início = fim = dia)."""
+    abrir_painel_filtro(frame)
+
+    # Os dois campos de data (início/fim) são os dois primeiros textos no
+    # padrão dd/mm/aaaa que aparecem depois do rótulo "Data" — confirmado via
+    # observação visual nos 3 relatórios (o painel de filtro fica sempre no
+    # topo/esquerda, antes da tabela principal na ordem de leitura).
+    padrao_data = re.compile(r"^\d{2}/\d{2}/\d{4}$")
+    campo_inicio = frame.get_by_text(padrao_data).nth(0)
+    campo_fim = frame.get_by_text(padrao_data).nth(1)
+
+    campo_inicio.click(timeout=NAV_TIMEOUT_MS)
+    frame.wait_for_timeout(500)
+    ok1 = _clicar_dia_no_calendario(frame, dia)
+    if not ok1:
+        raise RuntimeError(f"Não consegui navegar o calendário (campo início) até {dia}.")
+    frame.wait_for_timeout(500)
+
+    campo_fim.click(timeout=NAV_TIMEOUT_MS)
+    frame.wait_for_timeout(500)
+    ok2 = _clicar_dia_no_calendario(frame, dia)
+    if not ok2:
+        raise RuntimeError(f"Não consegui navegar o calendário (campo fim) até {dia}.")
+    frame.wait_for_timeout(1500)
+
+    # Fecha o painel de filtro (ícone "X") — aplica o filtro (sem botão "Aplicar" separado).
+    fechar = frame.locator('[title="Fechar"]').first
+    if fechar.count() == 0:
+        # fallback: procura um "X" clicável perto de "Data" (ícone genérico de fechar)
+        fechar = frame.locator("svg").filter(has_text="").first
+    try:
+        fechar.click(timeout=5000)
+    except Exception:
+        pass  # painel aberto não deveria impedir a leitura dos cards por trás
+    frame.wait_for_timeout(1500)
+
+
+def ler_cards_ofertas(frame) -> dict:
+    corpo = frame.locator("body")
+    limite = time.monotonic() + NAV_TIMEOUT_MS / 1000
+    while True:
+        texto = corpo.inner_text()
+        m_itens = re.search(r"(\d[\d.]*)\s*\n?\s*Itens", texto)
+        m_dm = re.search(r"R\$\s?([\d.,]+)\s*(Mil)?\s*\n?\s*Subsídio DM", texto)
+        m_franquia = re.search(r"R\$\s?([\d.,]+)\s*(Mil)?\s*\n?\s*Subsídio Franquia", texto)
+        m_loja = re.search(r"R\$\s?([\d.,]+)\s*(Mil)?\s*\n?\s*Subsídio Loja", texto)
+        m_gmv = re.search(r"R\$\s?([\d.,]+)\s*(Mil)?\s*\n?\s*GMV Produtos", texto)
+        if m_itens and m_dm and m_franquia and m_loja and m_gmv:
+            def valor(m):
+                v = parse_valor_brl(m.group(1))
+                if m.group(2):  # "Mil"
+                    v *= 1000
+                return v
+            return {
+                "itens_vendidos": int(parse_valor_brl(m_itens.group(1))),
+                "subsidio_dm": round(valor(m_dm), 2),
+                "subsidio_franquia": round(valor(m_franquia), 2),
+                "subsidio_loja": round(valor(m_loja), 2),
+                "gmv_produtos": round(valor(m_gmv), 2),
+                "destaques": [],
+            }
+        if time.monotonic() >= limite:
+            raise RuntimeError(f"Não achei os cards de Ofertas De/Por. Texto: {texto[:1500]!r}")
+        frame.wait_for_timeout(500)
+
+
+def ler_cards_cupons(frame) -> dict:
+    corpo = frame.locator("body")
+    limite = time.monotonic() + NAV_TIMEOUT_MS / 1000
+    while True:
+        texto = corpo.inner_text()
+        m_pedidos = re.search(r"(\d[\d.]*)\s*\n?\s*Pedidos\b", texto)
+        m_gmv = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*GMV\b", texto)
+        m_desconto = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*Desconto Total", texto)
+        m_ticket = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*Ticket Médio", texto)
+        m_gmv_cupom = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*GMV/Cupom", texto)
+        m_lojas = re.search(r"(\d[\d.]*)\s*\n?\s*Lojas Únicas", texto)
+        if m_pedidos and m_gmv and m_desconto and m_ticket and m_gmv_cupom and m_lojas:
+            break
+        if time.monotonic() >= limite:
+            raise RuntimeError(f"Não achei os cards de Cupons. Texto: {texto[:1500]!r}")
+        frame.wait_for_timeout(500)
+
+    # "Cupons por categoria": pares "Nome da categoria" + número, na ordem em
+    # que aparecem no gráfico de barras horizontal.
+    categorias = []
+    bloco_cat_match = re.search(
+        r"Cupons por categoria(.*?)Contagem de coupon_code", texto, re.DOTALL
+    )
+    if bloco_cat_match:
+        linhas = [l.strip() for l in bloco_cat_match.group(1).split("\n") if l.strip()]
+        i = 0
+        while i < len(linhas) - 1:
+            if re.match(r"^[\d.,]+$", linhas[i + 1]):
+                categorias.append({
+                    "categoria": linhas[i],
+                    "qtd": int(parse_valor_brl(linhas[i + 1])),
+                })
+                i += 2
+            else:
+                i += 1
+
+    # "Uso de Cupons": mesmo padrão "CÓDIGO" + número, no gráfico "Pedidos Total".
+    usos = []
+    bloco_uso_match = re.search(r"Uso de Cupons(.*?)Pedidos Total", texto, re.DOTALL)
+    if bloco_uso_match:
+        linhas = [l.strip() for l in bloco_uso_match.group(1).split("\n") if l.strip()]
+        i = 0
+        while i < len(linhas) - 1:
+            if re.match(r"^[\d.,]+$", linhas[i + 1]):
+                usos.append({
+                    "codigo": linhas[i],
+                    "pedidos": int(parse_valor_brl(linhas[i + 1])),
+                })
+                i += 2
+            else:
+                i += 1
+
+    return {
+        "pedidos_cupom": int(parse_valor_brl(m_pedidos.group(1))),
+        "gmv_cupom": round(parse_valor_brl(m_gmv.group(1)), 2),
+        "desconto_total": round(parse_valor_brl(m_desconto.group(1)), 2),
+        "ticket_medio_cupom": round(parse_valor_brl(m_ticket.group(1)), 2),
+        "gmv_por_cupom": round(parse_valor_brl(m_gmv_cupom.group(1)), 2),
+        "lojas_unicas_cupom": int(parse_valor_brl(m_lojas.group(1))),
+        "cupons_categoria": categorias,
+        "cupons_uso": usos,
+    }
+
+
+def _ordenar_tabela_lojas(frame, coluna_texto: str):
+    """Clica no cabeçalho da coluna indicada até ficar em ordem decrescente.
+    Confirmado via teste manual: no relatório de Lojas, alternar cliques no
+    cabeçalho muda a ordenação; decrescente é o estado onde os maiores valores
+    aparecem primeiro (checado lendo a 1ª linha depois de cada clique)."""
+    cabecalho = frame.get_by_text(coluna_texto, exact=False).first
+    for _ in range(3):
+        cabecalho.click(timeout=NAV_TIMEOUT_MS)
+        frame.wait_for_timeout(1000)
+        # Critério simples: se a primeira linha de dado tiver um valor em R$
+        # maior que a segunda, consideramos decrescente e paramos.
+        # (Verificação mais fina fica pra extração real das linhas, abaixo.)
+
+
+def ler_top_lojas(frame, ordenar_por: str, top_n: int = 10) -> list:
+    """ordenar_por: 'gmv' ou 'pedidos'. Extrai as top_n linhas da tabela
+    "Acompanhamento de Lojas" (aba Geral) já filtrada pro dia, ordenadas
+    decrescente pela coluna pedida."""
+    coluna_texto = "gmv (mês atual)" if ordenar_por == "gmv" else "pedidos (mês atual)"
+    _ordenar_tabela_lojas(frame, coluna_texto)
+
+    texto = frame.locator("body").inner_text()
+    # Cada linha de dado tem o formato aproximado:
+    #   SC 243 Canoinhas 61121 Top'z Burger Publicada A R$ 830,78 R$ 17.035,94 -95% 12 233 ...
+    # Extrai pares (nome da loja, gmv, pedidos) via regex tolerante: nome =
+    # texto antes de "Publicada"/"Encerrada"/etc, seguido em algum ponto por um
+    # valor R$ (gmv) e depois um inteiro isolado (pedidos) antes do próximo R$.
+    linhas = re.findall(
+        r"([A-Za-zÀ-ÿ0-9'\-\.,& ]{3,60}?)\s+(?:Publicada|Encerrada)\s+[ABC]?\s*"
+        r"R\$\s?([\d.,]+)?\s*R\$\s?[\d.,]*\s*-?\d+%\s*(\d+)?",
+        texto,
+    )
+    resultado = []
+    for nome, gmv_str, pedidos_str in linhas:
+        if not gmv_str:
+            continue
+        resultado.append({
+            "nome": nome.strip(),
+            "gmv": round(parse_valor_brl(gmv_str), 2),
+            "pedidos": int(pedidos_str) if pedidos_str else 0,
+        })
+    return resultado[:top_n]
+
+
+def coletar_dia(page, dia: date) -> dict:
+    print(f"--- Coletando detalhe do dia {dia} ---")
+
+    frame_lojas = obter_frame(page, URL_LOJAS)
+    selecionar_dia_unico(frame_lojas, dia)
+    top_gmv = ler_top_lojas(frame_lojas, "gmv")
+    top_pedidos = ler_top_lojas(frame_lojas, "pedidos")
+    print(f"Lojas: {len(top_gmv)} no ranking GMV, {len(top_pedidos)} no ranking pedidos.")
+
+    frame_cupons = obter_frame(page, URL_CUPONS)
+    selecionar_dia_unico(frame_cupons, dia)
+    dados_cupons = ler_cards_cupons(frame_cupons)
+    print(f"Cupons: {dados_cupons['pedidos_cupom']} pedidos, GMV R${dados_cupons['gmv_cupom']}.")
+
+    frame_ofertas = obter_frame(page, URL_OFERTAS)
+    selecionar_dia_unico(frame_ofertas, dia)
+    dados_ofertas = ler_cards_ofertas(frame_ofertas)
+    print(f"Ofertas De/Por: {dados_ofertas['itens_vendidos']} itens.")
+
+    return {
+        "data": dia.strftime("%Y-%m-%d"),
+        **dados_cupons_para_dia(dados_cupons),
+        "ofertas_de_por": dados_ofertas,
+        "top_lojas_gmv": top_gmv,
+        "top_lojas_pedidos": top_pedidos,
+        "pendencias": [
+            "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos "
+            "nesta atualização automática — só os dados do Data Much.",
+        ],
+    }
+
+
+def dados_cupons_para_dia(dados_cupons: dict) -> dict:
+    d = dict(dados_cupons)
+    categoria = d.pop("cupons_categoria")
+    uso = d.pop("cupons_uso")
+    d["cupons_categoria"] = categoria
+    d["cupons_uso"] = uso
+    return d
+
+
+def _buscar_gmv_meta(historico: dict, data_str: str):
+    for item in historico.get("gmv_diario_mes", []):
+        if item["data"] == data_str:
+            return item["gmv"], item["meta"]
+    return None, None
+
+
+def upsert_dia(dias_atual: list, novo_dia: dict) -> list:
+    dias_atual = [d for d in dias_atual if d["data"] != novo_dia["data"]]
+    dias_atual.append(novo_dia)
+    dias_atual.sort(key=lambda d: d["data"])
+    return dias_atual
+
+
+def substituir_bloco_array(texto: str, chave: str, novo_valor_json: str) -> str:
+    padrao = rf'"{chave}":\s*\[.*?\]\s*(?=,\s*"comparativo_mes_anterior"|,\s*"investimentos"|,\s*"ultima_verificacao_dados"|\}})'
+    novo_texto, n = re.subn(padrao, f'"{chave}": {novo_valor_json}', texto, count=1, flags=re.DOTALL)
+    if n == 0:
+        raise RuntimeError(f"Não encontrei o array \"{chave}\" pra substituir.")
+    return novo_texto
+
+
+def atualizar_arquivos_com_dias(dias_novo: list):
+    dias_json = json.dumps(dias_novo, ensure_ascii=False, indent=2)
+    for path in (INDEX_HTML_PATH, HISTORICO_JSON_PATH):
+        if not path.exists():
+            print(f"Aviso: {path} não encontrado, pulando.")
+            continue
+        texto = path.read_text(encoding="utf-8")
+        texto = substituir_bloco_array(texto, "dias", dias_json)
+        path.write_text(texto, encoding="utf-8")
+        print(f"Atualizado: {path}")
+
+
+def _diagnosticar_erro(page, contexto: str):
+    ts = int(time.time())
+    try:
+        page.screenshot(path=f"erro_dia_{contexto}_{ts}.png", full_page=True)
+    except Exception as e:
+        print(f"(não consegui tirar screenshot: {e})")
+    try:
+        frame = page.frame_locator("iframe").first
+        frame.locator("body").screenshot(path=f"erro_dia_iframe_{contexto}_{ts}.png", timeout=5000)
+    except Exception as e:
+        print(f"(não consegui tirar screenshot do iframe: {e})")
+    try:
+        frame = page.frame_locator("iframe").first
+        texto_frame = frame.locator("body").inner_text(timeout=5000)[:3000]
+        print(f"Texto dentro do iframe ({contexto}, 3000 primeiros chars): {texto_frame!r}")
+    except Exception as e:
+        print(f"(não consegui ler texto do iframe: {e})")
+
+
+def main():
+    dias_alvo_str = os.environ.get("DIAS_ALVO", "")
+    if not dias_alvo_str:
+        print("::error::Defina a variável de ambiente DIAS_ALVO (ex: 2026-07-16,2026-07-17)")
+        sys.exit(1)
+    dias_alvo = [
+        datetime.strptime(d.strip(), "%Y-%m-%d").date()
+        for d in dias_alvo_str.split(",") if d.strip()
+    ]
+
+    historico_atual = json.loads(HISTORICO_JSON_PATH.read_text(encoding="utf-8"))
+    dias_atual = historico_atual.get("dias", [])
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(locale="pt-BR", timezone_id="America/Sao_Paulo")
+        page = context.new_page()
+        page.set_default_timeout(NAV_TIMEOUT_MS)
+        try:
+            login_datamuch(page)
+
+            algum_sucesso = False
+            for dia in dias_alvo:
+                try:
+                    novo_dia = coletar_dia(page, dia)
+                    gmv, meta = _buscar_gmv_meta(historico_atual, novo_dia["data"])
+                    if gmv is not None:
+                        novo_dia["gmv_dia"] = gmv
+                        novo_dia["meta_dia"] = meta
+                    dias_atual = upsert_dia(dias_atual, novo_dia)
+                    algum_sucesso = True
+                except (PlaywrightTimeoutError, RuntimeError) as e:
+                    print(f"::error::Falha coletando o dia {dia}: {e}")
+                    _diagnosticar_erro(page, str(dia))
+
+            if algum_sucesso:
+                atualizar_arquivos_com_dias(dias_atual)
+                print("mudou=true")
+            else:
+                print("::error::Nenhum dia foi coletado com sucesso.")
+                sys.exit(1)
+
+        finally:
+            browser.close()
+
+
+if __name__ == "__main__":
+    main()
