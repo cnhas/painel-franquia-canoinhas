@@ -268,7 +268,7 @@ def ler_cards_cupons(frame) -> dict:
     while True:
         texto = corpo.inner_text()
         m_pedidos = re.search(r"(\d[\d.]*)\s*\n?\s*Pedidos\b", texto)
-        m_gmv = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*GMV\b", texto)
+        m_gmv = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*GMV(?!/)\b", texto)  # (?!/) evita casar com o card "GMV/Cupom"
         m_desconto = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*Desconto Total", texto)
         m_ticket = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*Ticket Médio", texto)
         m_gmv_cupom = re.search(r"R\$\s?([\d.,]+)\s*\n?\s*GMV/Cupom", texto)
@@ -285,6 +285,7 @@ def ler_cards_cupons(frame) -> dict:
     bloco_cat_match = re.search(
         r"Cupons por categoria(.*?)Contagem de coupon_code", texto, re.DOTALL
     )
+    print(f"[debug ler_cards_cupons] bloco categoria achado: {bool(bloco_cat_match)}")
     if bloco_cat_match:
         linhas = [l.strip() for l in bloco_cat_match.group(1).split("\n") if l.strip()]
         i = 0
@@ -301,6 +302,7 @@ def ler_cards_cupons(frame) -> dict:
     # "Uso de Cupons": mesmo padrão "CÓDIGO" + número, no gráfico "Pedidos Total".
     usos = []
     bloco_uso_match = re.search(r"Uso de Cupons(.*?)Pedidos Total", texto, re.DOTALL)
+    print(f"[debug ler_cards_cupons] bloco uso achado: {bool(bloco_uso_match)}")
     if bloco_uso_match:
         linhas = [l.strip() for l in bloco_uso_match.group(1).split("\n") if l.strip()]
         i = 0
@@ -362,25 +364,48 @@ def ler_top_lojas(frame, ordenar_por: str, top_n: int = 10) -> list:
 
     texto = frame.locator("body").inner_text()
     partes = texto.split("Selecionar Linha")
+    print(f"[debug ler_top_lojas/{ordenar_por}] {len(partes)} partes encontradas.")
+    if len(partes) >= 2:
+        primeiras_linhas = [l for l in partes[1].split("\n") if l != ""]
+        print(f"[debug ler_top_lojas/{ordenar_por}] 1º registro ({len(primeiras_linhas)} linhas): {primeiras_linhas!r}")
     resultado = []
     for parte in partes[1:]:  # partes[0] é tudo antes do 1º marcador (cabeçalho etc)
         linhas = [l for l in parte.split("\n") if l != ""]
         if len(linhas) < 12:
             continue
-        # Corta assim que aparece o próximo "UF" repetido demais cedo não é
-        # necessário pois já dividimos por "Selecionar Linha".
-        try:
-            nome = linhas[4].strip()
-            gmv_str = linhas[7].strip()
-            pedidos_str = linhas[11].strip()
-        except IndexError:
+        # Localiza a posição do status ("Publicada"/"Encerrada") como âncora —
+        # mais tolerante a variação no nº de linhas do que índice fixo.
+        idx_status = None
+        for i, l in enumerate(linhas):
+            if l in ("Publicada", "Encerrada"):
+                idx_status = i
+                break
+        if idx_status is None or idx_status < 1:
             continue
+        nome = linhas[idx_status - 1].strip()
+        # A partir do status: [categoria] [R$ gmv atual] [R$ gmv anterior] [pct%]
+        # ["Formatação Condicional Adicional"] [pedidos atual] ...
+        resto = linhas[idx_status + 1:]
+        valores_rs = [l for l in resto if l.startswith("R$") or l == "\xa0"]
+        # pega os 2 primeiros valores "tipo R$" (podem vir como \xa0 se vazios)
+        gmv_str = valores_rs[0] if len(valores_rs) >= 1 else ""
+        # pedidos atual = 1º número puro (sem R$, sem %) depois do 1º "Formatação..."
+        pedidos_str = ""
+        achou_formatacao = False
+        for l in resto:
+            if "Formatação" in l:
+                achou_formatacao = True
+                continue
+            if achou_formatacao:
+                pedidos_str = l
+                break
         if not nome or nome in ("\xa0",):
             continue
         gmv = parse_valor_brl(gmv_str) if gmv_str not in ("", "\xa0") else 0.0
         pedidos = int(parse_valor_brl(pedidos_str)) if pedidos_str not in ("", "\xa0") else 0
         resultado.append({"nome": nome, "gmv": round(gmv, 2), "pedidos": pedidos})
 
+    print(f"[debug ler_top_lojas/{ordenar_por}] {len(resultado)} lojas parseadas; amostra: {resultado[:3]!r}")
     chave = (lambda r: r["gmv"]) if ordenar_por == "gmv" else (lambda r: r["pedidos"])
     resultado.sort(key=chave, reverse=True)
     return resultado[:top_n]
