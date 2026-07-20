@@ -122,7 +122,15 @@ def ler_ultima_atualizacao(frame) -> datetime:
 
 
 def clicar_toggle(frame, rotulo: str):
-    frame.get_by_role("button", name=re.compile(rotulo, re.I)).click(timeout=NAV_TIMEOUT_MS)
+    # Confirmado via log de falha real (execução automática de 18/07/2026, 07:31): esse
+    # toggle "GMV"/"Pedidos" do Power BI NÃO tem role="button" com nome acessível — é o
+    # mesmo problema já visto em ler_ultima_atualizacao (texto renderizado sem semântica
+    # de HTML normal). get_by_role("button", ...) nunca resolvia e só dava timeout de
+    # 45s. Texto puro capturado no diagnóstico confirma "Pedidos" e "GMV" aparecem como
+    # linhas isoladas de texto (mesmo padrão do link "Hoje" no scrape_pedidos.py) — troca
+    # pra get_by_text exato, com .first pro caso de "GMV" aparecer de novo mais abaixo
+    # (no card de resultado).
+    frame.get_by_text(rotulo, exact=True).first.click(timeout=NAV_TIMEOUT_MS)
     frame.get_by_text(re.compile(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}")).first.wait_for(
         state="visible", timeout=NAV_TIMEOUT_MS
     )
