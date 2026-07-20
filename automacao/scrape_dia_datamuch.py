@@ -467,11 +467,35 @@ def upsert_dia(dias_atual: list, novo_dia: dict) -> list:
 
 
 def substituir_bloco_array(texto: str, chave: str, novo_valor_json: str) -> str:
-    padrao = rf'"{chave}":\s*\[.*?\]\s*(?=,\s*"comparativo_mes_anterior"|,\s*"investimentos"|,\s*"ultima_verificacao_dados"|\}})'
-    novo_texto, n = re.subn(padrao, f'"{chave}": {novo_valor_json}', texto, count=1, flags=re.DOTALL)
-    if n == 0:
-        raise RuntimeError(f"Não encontrei o array \"{chave}\" pra substituir.")
-    return novo_texto
+    """IMPORTANTE (bug real encontrado e corrigido em 20/07/2026): a versão
+    anterior usava uma regex "[.*?]" (não gulosa) pra achar o array inteiro.
+    Isso QUEBRA quando o array tem colchetes aninhados dentro dos itens (como
+    "dias", cujos itens têm top_lojas_gmv/top_lojas_pedidos/cupons_uso/
+    cupons_categoria, cada um um array próprio) — a regex não gulosa para no
+    PRIMEIRO "]" que encontra, que é o fechamento de um array aninhado, não o
+    fechamento do array de fora. Isso corrompeu o JSON de verdade (deixou
+    conteúdo antigo duplicado/pendurado no meio do arquivo). Corrigido pra
+    usar json.JSONDecoder().raw_decode, que entende profundidade de colchetes
+    de verdade (incluindo strings com colchetes escapados etc) e devolve o
+    índice exato de onde o valor JSON válido termina, mesmo que sobre lixo
+    depois."""
+    marcador = f'"{chave}":'
+    pos_chave = texto.find(marcador)
+    if pos_chave == -1:
+        raise RuntimeError(f"Não encontrei a chave \"{chave}\" no arquivo.")
+    pos_valor_antigo = pos_chave + len(marcador)
+    # Pula espaços/quebras de linha até o "[" de abertura.
+    i = pos_valor_antigo
+    while i < len(texto) and texto[i] in " \n\r\t":
+        i += 1
+    if i >= len(texto) or texto[i] != "[":
+        raise RuntimeError(f"Esperava um array logo depois de \"{chave}\": mas achei {texto[i:i+30]!r}")
+    decoder = json.JSONDecoder()
+    try:
+        _, fim_valor_antigo = decoder.raw_decode(texto, i)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Não consegui decodificar o array antigo de \"{chave}\" pra saber onde ele termina: {e}")
+    return texto[:pos_chave] + f'"{chave}": {novo_valor_json}' + texto[fim_valor_antigo:]
 
 
 def atualizar_arquivos_com_dias(dias_novo: list):
