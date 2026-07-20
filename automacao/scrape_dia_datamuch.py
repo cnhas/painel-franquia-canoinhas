@@ -505,8 +505,22 @@ def atualizar_arquivos_com_dias(dias_novo: list):
             print(f"Aviso: {path} não encontrado, pulando.")
             continue
         texto = path.read_text(encoding="utf-8")
-        texto = substituir_bloco_array(texto, "dias", dias_json)
-        path.write_text(texto, encoding="utf-8")
+        texto_novo = substituir_bloco_array(texto, "dias", dias_json)
+        # TRAVA DE SEGURANÇA (adicionada depois de um bug real que corrompeu o
+        # JSON em produção em 20/07/2026): antes de gravar, confirma que o
+        # trecho "dias": [...] que acabou de ser escrito é JSON válido de
+        # verdade, decodificando ele isoladamente. Pro historico_vendas.json
+        # (que é JSON puro do arquivo inteiro) confirma o arquivo inteiro.
+        try:
+            json.loads(dias_json)  # o pedaço que a gente mesmo gerou
+            if path == HISTORICO_JSON_PATH:
+                json.loads(texto_novo)  # o arquivo inteiro, só pro JSON puro
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"Trava de segurança: o resultado pra {path} não é JSON válido, "
+                f"NÃO vou gravar (evita repetir a corrupção de 20/07/2026). Erro: {e}"
+            )
+        path.write_text(texto_novo, encoding="utf-8")
         print(f"Atualizado: {path}")
 
 
