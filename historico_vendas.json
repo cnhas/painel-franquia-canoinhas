@@ -229,73 +229,73 @@
     "lojas_unicas_cupom": 43,
     "cupons_categoria": [
       {
-        "categoria": "BebidasBebidas",
+        "categoria": "Bebidas",
         "qtd": 56
       },
       {
-        "categoria": "Combos Coca-…Combos Coca-Cola",
+        "categoria": "Combos Coca-Cola",
         "qtd": 32
       },
       {
-        "categoria": "OfertasOfertas",
+        "categoria": "Ofertas",
         "qtd": 38
       },
       {
-        "categoria": "Bom e BaratoBom e Barato",
+        "categoria": "Bom e Barato",
         "qtd": 38
       },
       {
-        "categoria": "Combão com D…Combão com Desconto",
+        "categoria": "Combão com Desconto",
         "qtd": 31
       },
       {
-        "categoria": "Mais vendidos …Mais vendidos no app",
+        "categoria": "Mais vendidos no app",
         "qtd": 29
       },
       {
-        "categoria": "PorçõesPorções",
+        "categoria": "Porções",
         "qtd": 29
       },
       {
-        "categoria": "Maratona do Co…Maratona do Consumidor",
+        "categoria": "Maratona do Consumidor",
         "qtd": 27
       }
     ],
     "cupons_uso": [
       {
-        "codigo": "#MUCH20#MUCH20",
+        "codigo": "#MUCH20",
         "pedidos": 1
       },
       {
-        "codigo": "ADEGAADEGA",
+        "codigo": "ADEGA",
         "pedidos": 1
       },
       {
-        "codigo": "BIONDIBIONDI",
+        "codigo": "BIONDI",
         "pedidos": 1
       },
       {
-        "codigo": "GOLEIROGOLEIRO",
+        "codigo": "GOLEIRO",
         "pedidos": 1
       },
       {
-        "codigo": "MACHADOMACHADO",
+        "codigo": "MACHADO",
         "pedidos": 1
       },
       {
-        "codigo": "MUCH20MUCH20",
+        "codigo": "MUCH20",
         "pedidos": 3
       },
       {
-        "codigo": "PEDEDMPEDEDM",
+        "codigo": "PEDEDM",
         "pedidos": 44
       },
       {
-        "codigo": "PRIMEIROPEDIDOPRIMEIROPEDIDO",
+        "codigo": "PRIMEIROPEDIDO",
         "pedidos": 2
       },
       {
-        "codigo": "RANGORANGO",
+        "codigo": "RANGO",
         "pedidos": 12
       }
     ],
@@ -309,54 +309,54 @@
     },
     "top_lojas_gmv": [
       {
-        "nome": "Top'z Burger",
-        "gmv": 963.71,
-        "pedidos": 11
+        "nome": "Bavaria Lanches,a",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Ideal Hamburgueria",
-        "gmv": 665.23,
-        "pedidos": 9
+        "nome": "Cantinho do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Pizzaria Portal",
-        "gmv": 449.6,
-        "pedidos": 3
+        "nome": "Laudecir Maciel Carnes",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Sushi Yume",
-        "gmv": 400.6,
-        "pedidos": 4
+        "nome": "Fast Food Rotatória Costela Burguer",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Garden Hamburgueria e Bistro",
-        "gmv": 371.38,
-        "pedidos": 5
+        "nome": "Point do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Croco Pizza Delivery",
-        "gmv": 358.6,
-        "pedidos": 4
+        "nome": "Chef & Chef Restaurante",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Mietta Café",
-        "gmv": 325.7,
-        "pedidos": 8
+        "nome": "Avenida Café e Chopp",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Big X-Costela Pioneiro Desde 2016",
-        "gmv": 308.0,
-        "pedidos": 2
+        "nome": "La Casa de Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "MasterPizza Delivery - Campo da Água Verde",
-        "gmv": 282.0,
-        "pedidos": 4
+        "nome": "Container Burguer Bar",
+        "gmv": 0.0,
+        "pedidos": 0
       },
       {
-        "nome": "Fredie's Burguer",
-        "gmv": 251.86,
-        "pedidos": 3
+        "nome": "Espetim na Brasa",
+        "gmv": 0.0,
+        "pedidos": 0
       }
     ],
     "top_lojas_pedidos": [
@@ -427,57 +427,57 @@
     "lojas_unicas_cupom": 42,
     "cupons_categoria": [
       {
-        "categoria": "BebidasBebidas",
+        "categoria": "Bebidas",
         "qtd": 67
       },
       {
-        "categoria": "PorçõesPorções",
+        "categoria": "Porções",
         "qtd": 31
       },
       {
-        "categoria": "Combos Coca-…Combos Coca-Cola",
+        "categoria": "Combos Coca-Cola",
         "qtd": 38
       },
       {
-        "categoria": "OfertasOfertas",
+        "categoria": "Ofertas",
         "qtd": 35
       },
       {
-        "categoria": "Bom e BaratoBom e Barato",
+        "categoria": "Bom e Barato",
         "qtd": 21
       },
       {
-        "categoria": "Mais vendidos …Mais vendidos no app",
+        "categoria": "Mais vendidos no app",
         "qtd": 40
       },
       {
-        "categoria": "Combão com D…Combão com Desconto",
+        "categoria": "Combão com Desconto",
         "qtd": 24
       },
       {
-        "categoria": "Seleção de Ofer…Seleção de Ofertas",
+        "categoria": "Seleção de Ofertas",
         "qtd": 21
       }
     ],
     "cupons_uso": [
       {
-        "codigo": "#MUCH20#MUCH20",
+        "codigo": "#MUCH20",
         "pedidos": 3
       },
       {
-        "codigo": "BAVARIABAVARIA",
+        "codigo": "BAVARIA",
         "pedidos": 2
       },
       {
-        "codigo": "MUCH20MUCH20",
+        "codigo": "MUCH20",
         "pedidos": 1
       },
       {
-        "codigo": "PEDEDMPEDEDM",
+        "codigo": "PEDEDM",
         "pedidos": 70
       },
       {
-        "codigo": "PRIMEIROPEDIDOPRIMEIROPEDIDO",
+        "codigo": "PRIMEIROPEDIDO",
         "pedidos": 2
       }
     ],
@@ -609,73 +609,73 @@
     "lojas_unicas_cupom": 51,
     "cupons_categoria": [
       {
-        "categoria": "BebidasBebidas",
+        "categoria": "Bebidas",
         "qtd": 87
       },
       {
-        "categoria": "OfertasOfertas",
+        "categoria": "Ofertas",
         "qtd": 38
       },
       {
-        "categoria": "Combos Coca-…Combos Coca-Cola",
+        "categoria": "Combos Coca-Cola",
         "qtd": 47
       },
       {
-        "categoria": "Mais vendidos …Mais vendidos no app",
+        "categoria": "Mais vendidos no app",
         "qtd": 48
       },
       {
-        "categoria": "Combão com D…Combão com Desconto",
+        "categoria": "Combão com Desconto",
         "qtd": 39
       },
       {
-        "categoria": "Bom e BaratoBom e Barato",
+        "categoria": "Bom e Barato",
         "qtd": 33
       },
       {
-        "categoria": "Semana do Clie…Semana do Cliente",
+        "categoria": "Semana do Cliente",
         "qtd": 40
       },
       {
-        "categoria": "PorçõesPorções",
+        "categoria": "Porções",
         "qtd": 37
       }
     ],
     "cupons_uso": [
       {
-        "codigo": "#MUCH20#MUCH20",
+        "codigo": "#MUCH20",
         "pedidos": 2
       },
       {
-        "codigo": "ADEGAADEGA",
+        "codigo": "ADEGA",
         "pedidos": 1
       },
       {
-        "codigo": "BAVARIABAVARIA",
+        "codigo": "BAVARIA",
         "pedidos": 1
       },
       {
-        "codigo": "BIONDIBIONDI",
+        "codigo": "BIONDI",
         "pedidos": 1
       },
       {
-        "codigo": "DEBRONZEDEBRONZE",
+        "codigo": "DEBRONZE",
         "pedidos": 4
       },
       {
-        "codigo": "MUCH20MUCH20",
+        "codigo": "MUCH20",
         "pedidos": 5
       },
       {
-        "codigo": "PEDEDMPEDEDM",
+        "codigo": "PEDEDM",
         "pedidos": 81
       },
       {
-        "codigo": "PIX10PIX10",
+        "codigo": "PIX10",
         "pedidos": 1
       },
       {
-        "codigo": "PRIMEIROPEDIDOPRIMEIROPEDIDO",
+        "codigo": "PRIMEIROPEDIDO",
         "pedidos": 1
       }
     ],
@@ -807,65 +807,65 @@
     "lojas_unicas_cupom": 38,
     "cupons_categoria": [
       {
-        "categoria": "BebidasBebidas",
+        "categoria": "Bebidas",
         "qtd": 77
       },
       {
-        "categoria": "Combos Coca-…Combos Coca-Cola",
+        "categoria": "Combos Coca-Cola",
         "qtd": 42
       },
       {
-        "categoria": "Bom e BaratoBom e Barato",
+        "categoria": "Bom e Barato",
         "qtd": 57
       },
       {
-        "categoria": "Seleção de Ofer…Seleção de Ofertas",
+        "categoria": "Seleção de Ofertas",
         "qtd": 36
       },
       {
-        "categoria": "Combão com D…Combão com Desconto",
+        "categoria": "Combão com Desconto",
         "qtd": 40
       },
       {
-        "categoria": "OfertasOfertas",
+        "categoria": "Ofertas",
         "qtd": 37
       },
       {
-        "categoria": "PorçõesPorções",
+        "categoria": "Porções",
         "qtd": 35
       },
       {
-        "categoria": "Maratona do Co…Maratona do Consumidor",
+        "categoria": "Maratona do Consumidor",
         "qtd": 33
       }
     ],
     "cupons_uso": [
       {
-        "codigo": "#MUCH20#MUCH20",
+        "codigo": "#MUCH20",
         "pedidos": 4
       },
       {
-        "codigo": "BAVARIABAVARIA",
+        "codigo": "BAVARIA",
         "pedidos": 1
       },
       {
-        "codigo": "BIONDIBIONDI",
+        "codigo": "BIONDI",
         "pedidos": 1
       },
       {
-        "codigo": "MUCH20MUCH20",
+        "codigo": "MUCH20",
         "pedidos": 2
       },
       {
-        "codigo": "PEDEDMPEDEDM",
+        "codigo": "PEDEDM",
         "pedidos": 63
       },
       {
-        "codigo": "PRIMEIROPEDIDOPRIMEIROPEDIDO",
+        "codigo": "PRIMEIROPEDIDO",
         "pedidos": 3
       },
       {
-        "codigo": "VITORIA2026VITORIA2026",
+        "codigo": "VITORIA2026",
         "pedidos": 15
       }
     ],
