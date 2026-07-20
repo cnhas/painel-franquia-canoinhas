@@ -126,6 +126,12 @@ def obter_frame(page, url: str) -> Frame:
     return frame
 
 
+def _esperar(frame, ms: int):
+    """FrameLocator não tem wait_for_timeout (só Page/Frame têm) — pega a Page
+    dona do frame via um Locator qualquer dentro dele e espera por ali."""
+    frame.locator("body").page.wait_for_timeout(ms)
+
+
 def abrir_painel_filtro(frame):
     # DESCOBERTA (execução real de 20/07/2026): estes relatórios (Lojas/Cupons/
     # Ofertas), apesar de terem sido registrados numa sessão anterior como "não
@@ -176,13 +182,13 @@ def selecionar_dia_unico(frame, dia: date):
     campo_inicio.fill("")
     campo_inicio.fill(data_str)
     campo_inicio.press("Tab")
-    frame.wait_for_timeout(800)
+    _esperar(frame, 800)
 
     campo_fim.click(timeout=NAV_TIMEOUT_MS)
     campo_fim.fill("")
     campo_fim.fill(data_str)
     campo_fim.press("Tab")
-    frame.wait_for_timeout(1500)
+    _esperar(frame, 1500)
 
     # Fecha o painel de filtro. Confirmado que não existe botão "Aplicar"
     # separado (os cards já reagem assim que os 2 campos têm valor) — então
@@ -207,7 +213,7 @@ def selecionar_dia_unico(frame, dia: date):
             frame.locator("body").press("Escape")
         except Exception:
             pass
-    frame.wait_for_timeout(1500)
+    _esperar(frame, 1500)
 
 
 def ler_cards_ofertas(frame) -> dict:
@@ -236,7 +242,7 @@ def ler_cards_ofertas(frame) -> dict:
             }
         if time.monotonic() >= limite:
             raise RuntimeError(f"Não achei os cards de Ofertas De/Por. Texto: {texto[:1500]!r}")
-        frame.wait_for_timeout(500)
+        _esperar(frame, 500)
 
 
 def ler_cards_cupons(frame) -> dict:
@@ -254,7 +260,7 @@ def ler_cards_cupons(frame) -> dict:
             break
         if time.monotonic() >= limite:
             raise RuntimeError(f"Não achei os cards de Cupons. Texto: {texto[:1500]!r}")
-        frame.wait_for_timeout(500)
+        _esperar(frame, 500)
 
     # "Cupons por categoria": pares "Nome da categoria" + número, na ordem em
     # que aparecem no gráfico de barras horizontal.
@@ -311,7 +317,7 @@ def _ordenar_tabela_lojas(frame, coluna_texto: str):
     cabecalho = frame.get_by_text(coluna_texto, exact=False).first
     for _ in range(3):
         cabecalho.click(timeout=NAV_TIMEOUT_MS)
-        frame.wait_for_timeout(1000)
+        _esperar(frame, 1000)
         # Critério simples: se a primeira linha de dado tiver um valor em R$
         # maior que a segunda, consideramos decrescente e paramos.
         # (Verificação mais fina fica pra extração real das linhas, abaixo.)
@@ -335,7 +341,7 @@ def ler_top_lojas(frame, ordenar_por: str, top_n: int = 10) -> list:
     como "\xa0" (nbsp) quando vazios/zerados."""
     coluna_texto = "gmv (mês atual)" if ordenar_por == "gmv" else "pedidos (mês atual)"
     _ordenar_tabela_lojas(frame, coluna_texto)
-    frame.wait_for_timeout(1000)
+    _esperar(frame, 1000)
 
     texto = frame.locator("body").inner_text()
     partes = texto.split("Selecionar Linha")
