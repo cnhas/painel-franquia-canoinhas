@@ -127,11 +127,32 @@ def obter_frame(page, url: str) -> Frame:
 
 
 def abrir_painel_filtro(frame):
-    # Ícone de funil com tooltip nativo "Abrir opções de filtro" (confirmado via
-    # observação visual real em todos os 3 relatórios).
-    icone = frame.locator('[title="Abrir opções de filtro"]').first
-    icone.click(timeout=NAV_TIMEOUT_MS)
-    frame.get_by_text("Data", exact=True).first.wait_for(state="visible", timeout=NAV_TIMEOUT_MS)
+    # DESCOBERTA (execução real de 20/07/2026): estes relatórios (Lojas/Cupons/
+    # Ofertas), apesar de terem sido registrados numa sessão anterior como "não
+    # são Power BI" (só o report/208 seria), na verdade TAMBÉM são embeds do
+    # Power BI — confirmado pelo texto "Relatório do Power BI" capturado no
+    # diagnóstico de erro. Isso significa que ícones como o funil de filtro
+    # quase certamente NÃO têm atributo HTML "title" (mesmo problema já visto
+    # com "Última Atualização" e os toggles GMV/Pedidos no report/208) — o
+    # seletor por título falhou com timeout. Tenta várias estratégias em
+    # sequência: role=button com nome acessível, aria-label, e por último
+    # title (caso algum dos 3 relatórios seja diferente do 208).
+    estrategias = [
+        lambda: frame.get_by_role("button", name=re.compile("filtro", re.I)).first,
+        lambda: frame.locator('[aria-label*="iltro"]').first,
+        lambda: frame.locator('[title*="iltro"]').first,
+    ]
+    ultimo_erro = None
+    for estrategia in estrategias:
+        try:
+            el = estrategia()
+            el.click(timeout=15000)
+            frame.get_by_text("Data", exact=True).first.wait_for(state="visible", timeout=10000)
+            return
+        except Exception as e:
+            ultimo_erro = e
+            continue
+    raise RuntimeError(f"Não consegui abrir o painel de filtro por nenhuma estratégia. Último erro: {ultimo_erro}")
 
 
 def _clicar_dia_no_calendario(frame, dia: date, tentativas_navegacao: int = 6):
@@ -202,15 +223,29 @@ def selecionar_dia_unico(frame, dia: date):
         raise RuntimeError(f"Não consegui navegar o calendário (campo fim) até {dia}.")
     frame.wait_for_timeout(1500)
 
-    # Fecha o painel de filtro (ícone "X") — aplica o filtro (sem botão "Aplicar" separado).
-    fechar = frame.locator('[title="Fechar"]').first
-    if fechar.count() == 0:
-        # fallback: procura um "X" clicável perto de "Data" (ícone genérico de fechar)
-        fechar = frame.locator("svg").filter(has_text="").first
-    try:
-        fechar.click(timeout=5000)
-    except Exception:
-        pass  # painel aberto não deveria impedir a leitura dos cards por trás
+    # Fecha o painel de filtro. Confirmado que não existe botão "Aplicar"
+    # separado (os cards já reagem assim que os 2 campos têm valor) — então
+    # só precisa tirar o painel da frente. Tenta clicar num ícone de fechar
+    # por algumas estratégias e, se nenhuma funcionar, tenta Escape; se nem
+    # isso fechar o painel, não é necessariamente um problema — os cards por
+    # trás já devem ter atualizado, só ficam parcialmente cobertos pelo
+    # painel na leitura via inner_text (que não se importa com sobreposição
+    # visual, então não deveria atrapalhar a extração de texto).
+    for estrategia in (
+        lambda: frame.get_by_role("button", name=re.compile("fechar", re.I)).first,
+        lambda: frame.locator('[aria-label*="echar" i]').first,
+        lambda: frame.locator('[title*="echar" i]').first,
+    ):
+        try:
+            estrategia().click(timeout=5000)
+            break
+        except Exception:
+            continue
+    else:
+        try:
+            frame.locator("body").press("Escape")
+        except Exception:
+            pass
     frame.wait_for_timeout(1500)
 
 
@@ -324,30 +359,46 @@ def _ordenar_tabela_lojas(frame, coluna_texto: str):
 def ler_top_lojas(frame, ordenar_por: str, top_n: int = 10) -> list:
     """ordenar_por: 'gmv' ou 'pedidos'. Extrai as top_n linhas da tabela
     "Acompanhamento de Lojas" (aba Geral) já filtrada pro dia, ordenadas
-    decrescente pela coluna pedida."""
+    decrescente pela coluna pedida.
+
+    Formato real por linha (confirmado via diagnóstico de execução real,
+    20/07/2026 — texto puro de dentro do iframe, uma "célula" por linha de
+    texto, exatamente 15 linhas por registro de loja, nessa ordem):
+      UF, id_cidade, cidade, id_empresa, empresa, status, categoria,
+      "R$ gmv atual", "R$ gmv anterior", "pct% mom", "Formatação Condicional
+      Adicional", pedidos_atual, pedidos_anterior, "pct% mom",
+      "Formatação Condicional Adicional"
+    Cada registro é precedido por um marcador de texto "Selecionar Linha"
+    (rótulo de acessibilidade do Power BI pra seleção de linha da matriz) —
+    usado aqui como separador entre registros. Categoria e valores podem vir
+    como "\xa0" (nbsp) quando vazios/zerados."""
     coluna_texto = "gmv (mês atual)" if ordenar_por == "gmv" else "pedidos (mês atual)"
     _ordenar_tabela_lojas(frame, coluna_texto)
+    frame.wait_for_timeout(1000)
 
     texto = frame.locator("body").inner_text()
-    # Cada linha de dado tem o formato aproximado:
-    #   SC 243 Canoinhas 61121 Top'z Burger Publicada A R$ 830,78 R$ 17.035,94 -95% 12 233 ...
-    # Extrai pares (nome da loja, gmv, pedidos) via regex tolerante: nome =
-    # texto antes de "Publicada"/"Encerrada"/etc, seguido em algum ponto por um
-    # valor R$ (gmv) e depois um inteiro isolado (pedidos) antes do próximo R$.
-    linhas = re.findall(
-        r"([A-Za-zÀ-ÿ0-9'\-\.,& ]{3,60}?)\s+(?:Publicada|Encerrada)\s+[ABC]?\s*"
-        r"R\$\s?([\d.,]+)?\s*R\$\s?[\d.,]*\s*-?\d+%\s*(\d+)?",
-        texto,
-    )
+    partes = texto.split("Selecionar Linha")
     resultado = []
-    for nome, gmv_str, pedidos_str in linhas:
-        if not gmv_str:
+    for parte in partes[1:]:  # partes[0] é tudo antes do 1º marcador (cabeçalho etc)
+        linhas = [l for l in parte.split("\n") if l != ""]
+        if len(linhas) < 12:
             continue
-        resultado.append({
-            "nome": nome.strip(),
-            "gmv": round(parse_valor_brl(gmv_str), 2),
-            "pedidos": int(pedidos_str) if pedidos_str else 0,
-        })
+        # Corta assim que aparece o próximo "UF" repetido demais cedo não é
+        # necessário pois já dividimos por "Selecionar Linha".
+        try:
+            nome = linhas[4].strip()
+            gmv_str = linhas[7].strip()
+            pedidos_str = linhas[11].strip()
+        except IndexError:
+            continue
+        if not nome or nome in ("\xa0",):
+            continue
+        gmv = parse_valor_brl(gmv_str) if gmv_str not in ("", "\xa0") else 0.0
+        pedidos = int(parse_valor_brl(pedidos_str)) if pedidos_str not in ("", "\xa0") else 0
+        resultado.append({"nome": nome, "gmv": round(gmv, 2), "pedidos": pedidos})
+
+    chave = (lambda r: r["gmv"]) if ordenar_por == "gmv" else (lambda r: r["pedidos"])
+    resultado.sort(key=chave, reverse=True)
     return resultado[:top_n]
 
 
@@ -443,6 +494,26 @@ def _diagnosticar_erro(page, contexto: str):
         print(f"Texto dentro do iframe ({contexto}, 3000 primeiros chars): {texto_frame!r}")
     except Exception as e:
         print(f"(não consegui ler texto do iframe: {e})")
+    # Dump extra: lista os aria-label e title de TODOS os elementos com esses
+    # atributos, e os nomes acessíveis de todo elemento role=button — isso
+    # deve revelar o nome real do ícone de filtro se as estratégias de
+    # abrir_painel_filtro() falharem de novo.
+    try:
+        frame = page.frame_locator("iframe").first
+        aria_labels = frame.locator("[aria-label]").evaluate_all(
+            "els => els.map(e => e.getAttribute('aria-label')).filter((v,i,a) => a.indexOf(v)===i).slice(0, 60)"
+        )
+        print(f"aria-labels únicos encontrados no iframe ({contexto}): {aria_labels}")
+    except Exception as e:
+        print(f"(não consegui listar aria-labels: {e})")
+    try:
+        frame = page.frame_locator("iframe").first
+        titles = frame.locator("[title]").evaluate_all(
+            "els => els.map(e => e.getAttribute('title')).filter((v,i,a) => a.indexOf(v)===i).slice(0, 60)"
+        )
+        print(f"atributos title únicos encontrados no iframe ({contexto}): {titles}")
+    except Exception as e:
+        print(f"(não consegui listar titles: {e})")
 
 
 def main():
