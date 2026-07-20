@@ -279,44 +279,74 @@ def ler_cards_cupons(frame) -> dict:
             raise RuntimeError(f"Não achei os cards de Cupons. Texto: {texto[:1500]!r}")
         _esperar(frame, 500)
 
-    # "Cupons por categoria": pares "Nome da categoria" + número, na ordem em
-    # que aparecem no gráfico de barras horizontal.
+    # "Cupons por categoria" e "Uso de Cupons" são gráficos de barra do Power
+    # BI — os rótulos/valores das barras são desenhados como <text> dentro de
+    # um <svg>, e elementos SVG NÃO entram no inner_text() do body (só texto
+    # HTML normal entra). Por isso a tentativa anterior (buscar essas strings
+    # dentro do texto do body) sempre dava bloco "achado" mas vazio. Em vez
+    # disso, lê os <text> de dentro do <svg> de cada gráfico diretamente.
     categorias = []
-    bloco_cat_match = re.search(
-        r"Cupons por categoria(.*?)Contagem de coupon_code", texto, re.DOTALL
-    )
-    print(f"[debug ler_cards_cupons] bloco categoria achado: {bool(bloco_cat_match)}")
-    if bloco_cat_match:
-        linhas = [l.strip() for l in bloco_cat_match.group(1).split("\n") if l.strip()]
-        print(f"[debug ler_cards_cupons] linhas bloco categoria ({len(linhas)}): {linhas!r}")
-        i = 0
-        while i < len(linhas) - 1:
-            if re.match(r"^[\d.,]+$", linhas[i + 1]):
-                categorias.append({
-                    "categoria": linhas[i],
-                    "qtd": int(parse_valor_brl(linhas[i + 1])),
-                })
-                i += 2
-            else:
-                i += 1
-
-    # "Uso de Cupons": mesmo padrão "CÓDIGO" + número, no gráfico "Pedidos Total".
     usos = []
-    bloco_uso_match = re.search(r"Uso de Cupons(.*?)Pedidos Total", texto, re.DOTALL)
-    print(f"[debug ler_cards_cupons] bloco uso achado: {bool(bloco_uso_match)}")
-    if bloco_uso_match:
-        linhas = [l.strip() for l in bloco_uso_match.group(1).split("\n") if l.strip()]
-        print(f"[debug ler_cards_cupons] linhas bloco uso ({len(linhas)}): {linhas!r}")
+    try:
+        todos_svg_texts = frame.locator("svg text").all_inner_texts()
+        print(f"[debug ler_cards_cupons] todos os textos de <svg text> na página ({len(todos_svg_texts)}): {todos_svg_texts!r}")
+    except Exception as e:
+        todos_svg_texts = []
+        print(f"[debug ler_cards_cupons] não consegui ler <svg text>: {e}")
+
+    def _extrair_pares_categoria_valor(rotulos: list) -> list:
+        """A partir de uma lista plana de rótulos de eixo/valores de barra
+        (mistura de nomes de categoria e números, na ordem em que aparecem
+        no SVG), tenta parear nome->valor assumindo que vem um nome seguido
+        do valor da barra correspondente."""
+        pares = []
         i = 0
-        while i < len(linhas) - 1:
-            if re.match(r"^[\d.,]+$", linhas[i + 1]):
-                usos.append({
-                    "codigo": linhas[i],
-                    "pedidos": int(parse_valor_brl(linhas[i + 1])),
-                })
+        while i < len(rotulos) - 1:
+            atual, proximo = rotulos[i].strip(), rotulos[i + 1].strip()
+            if atual and not re.match(r"^[\d.,]+$", atual) and re.match(r"^[\d.,]+$", proximo):
+                pares.append((atual, int(parse_valor_brl(proximo))))
                 i += 2
             else:
                 i += 1
+        return pares
+
+    try:
+        container_cat = frame.locator(
+            "text=Cupons por categoria"
+        ).first.locator("xpath=ancestor::*[self::div][1]")
+        # Sobe até achar um ancestral que já contenha um <svg> dentro (o
+        # "visual container" do Power BI) — tenta alguns níveis.
+        svg_texts_cat = []
+        for _ in range(6):
+            try:
+                svg_texts_cat = container_cat.locator("svg text").all_inner_texts()
+                if svg_texts_cat:
+                    break
+            except Exception:
+                pass
+            container_cat = container_cat.locator("xpath=..")
+        print(f"[debug ler_cards_cupons] svg text dentro do container 'Cupons por categoria' ({len(svg_texts_cat)}): {svg_texts_cat!r}")
+        categorias = [{"categoria": c, "qtd": v} for c, v in _extrair_pares_categoria_valor(svg_texts_cat)]
+    except Exception as e:
+        print(f"[debug ler_cards_cupons] falha ao extrair 'Cupons por categoria': {e}")
+
+    try:
+        container_uso = frame.locator(
+            "text=Uso de Cupons"
+        ).first.locator("xpath=ancestor::*[self::div][1]")
+        svg_texts_uso = []
+        for _ in range(6):
+            try:
+                svg_texts_uso = container_uso.locator("svg text").all_inner_texts()
+                if svg_texts_uso:
+                    break
+            except Exception:
+                pass
+            container_uso = container_uso.locator("xpath=..")
+        print(f"[debug ler_cards_cupons] svg text dentro do container 'Uso de Cupons' ({len(svg_texts_uso)}): {svg_texts_uso!r}")
+        usos = [{"codigo": c, "pedidos": v} for c, v in _extrair_pares_categoria_valor(svg_texts_uso)]
+    except Exception as e:
+        print(f"[debug ler_cards_cupons] falha ao extrair 'Uso de Cupons': {e}")
 
     return {
         "pedidos_cupom": int(parse_valor_brl(m_pedidos.group(1))),
