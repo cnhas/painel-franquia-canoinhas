@@ -161,6 +161,18 @@ def abrir_painel_filtro(frame):
     raise RuntimeError(f"Não consegui abrir o painel de filtro por nenhuma estratégia. Último erro: {ultimo_erro}")
 
 
+def _fechar_overlay_calendario(frame):
+    """Se preencher o campo de data abriu um calendário overlay por cima da
+    tela (confirmado via erro real: um <div class="cdk-overlay-backdrop">
+    passa a interceptar cliques em qualquer outro elemento), fecha com
+    Escape. Não é erro se não tiver nada pra fechar."""
+    try:
+        pagina = frame.locator("body").page
+        pagina.keyboard.press("Escape")
+    except Exception:
+        pass
+
+
 def selecionar_dia_unico(frame, dia: date):
     """Abre o painel de filtro (se ainda não estiver aberto) e seleciona o campo
     Data pra cobrir só o dia indicado (início = fim = dia).
@@ -178,16 +190,21 @@ def selecionar_dia_unico(frame, dia: date):
     campo_inicio = frame.get_by_label(re.compile("Data de início", re.I)).first
     campo_fim = frame.get_by_label(re.compile(r"Data de t[ée]rmino", re.I)).first
 
-    campo_inicio.click(timeout=NAV_TIMEOUT_MS)
-    campo_inicio.fill("")
+    # NÃO clica no campo antes de preencher — clicar abre um calendário
+    # (overlay do Angular Material/CDK) por cima da tela, que fica bloqueando
+    # cliques nos elementos seguintes (confirmado via erro real: "cdk-overlay-
+    # backdrop ... intercepts pointer events"). .fill() já foca o campo
+    # sozinho, sem abrir esse overlay.
     campo_inicio.fill(data_str)
     campo_inicio.press("Tab")
-    _esperar(frame, 800)
+    _esperar(frame, 500)
+    _fechar_overlay_calendario(frame)
+    _esperar(frame, 500)
 
-    campo_fim.click(timeout=NAV_TIMEOUT_MS)
-    campo_fim.fill("")
     campo_fim.fill(data_str)
     campo_fim.press("Tab")
+    _esperar(frame, 500)
+    _fechar_overlay_calendario(frame)
     _esperar(frame, 1500)
 
     # Fecha o painel de filtro. Confirmado que não existe botão "Aplicar"
