@@ -46,6 +46,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -131,9 +132,10 @@ def clicar_toggle(frame, rotulo: str):
     # pra get_by_text exato, com .first pro caso de "GMV" aparecer de novo mais abaixo
     # (no card de resultado).
     frame.get_by_text(rotulo, exact=True).first.click(timeout=NAV_TIMEOUT_MS)
-    frame.get_by_text(re.compile(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}")).first.wait_for(
-        state="visible", timeout=NAV_TIMEOUT_MS
-    )
+    # DESCOBERTA (execução real de 20/07/2026): esperar o texto de "Última Atualização"
+    # ficar visível de novo NÃO garante nada — esse texto é fixo, não muda com o toggle.
+    # O espera-de-verdade (até os VALORES dos cards, não só os rótulos, re-renderizarem)
+    # agora é feito dentro de ler_cards_mensais via polling — ver comentário lá.
 
 
 def ler_cards_mensais(frame) -> dict:
@@ -159,30 +161,47 @@ def ler_cards_mensais(frame) -> dict:
     "Resultados" também (não só depois de "Meta do Mês"), removendo o texto de filtros/
     data do topo que também tem números soltos e poderia contaminar a extração da visão
     Pedidos; 2) se não achar "R$", cair pro formato de número simples (com separador de
-    milhar brasileiro) nos números que sobram depois de remover os percentuais."""
-    texto_completo = frame.locator("body").inner_text()
-    # "Resultados" aparece logo antes dos cards em ambas as visões — corta antes disso pra
-    # não pegar números soltos do cabeçalho (data de "Última Atualização", filtros).
-    corte = texto_completo.split("Resultados", 1)[-1]
-    # Corta antes de "Meta do Mês" (o gráfico de velocímetro logo abaixo dos cards também
-    # tem números que atrapalhariam a extração se fossem incluídos).
-    corte = corte.split("Meta do Mês")[0]
-    valores_pct = [parse_pct(v) for v in re.findall(r"-?[\d.,]+\s?%", corte)]
+    milhar brasileiro) nos números que sobram depois de remover os percentuais.
 
-    valores_rs_str = re.findall(r"-?R\$\s?[\d.,]+", corte)
-    if valores_rs_str:
-        valores_rs = [parse_valor_brl(v) for v in valores_rs_str]
-    else:
-        # Visão Pedidos: sem "R$". Remove os percentuais do texto primeiro (pra não
-        # confundir "4,6%" com um valor principal) e extrai os números simples restantes.
-        sem_pct = re.sub(r"-?[\d.,]+\s?%", "", corte)
-        valores_rs = [parse_valor_brl(v) for v in re.findall(r"-?\d[\d.]*\d|-?\d", sem_pct)]
+    TAMBÉM DESCOBERTO (mesma rodada de testes): logo depois de clicar no toggle GMV/
+    Pedidos, o Power BI às vezes ainda está re-renderizando — o texto lido fica só com os
+    RÓTULOS dos cards ("Pedidos\nMédia Pedidos/Dia\n...") sem os valores, porque não
+    existe nenhum evento confiável pra esperar (o texto de "Última Atualização" não muda
+    com o toggle). Por isso a extração inteira roda dentro de um loop de polling: só
+    desiste e levanta erro se passar o timeout inteiro sem achar valores suficientes."""
+    corpo = frame.locator("body")
+    pagina = corpo.page
+    limite = time.monotonic() + NAV_TIMEOUT_MS / 1000
+    corte = ""
+    valores_rs, valores_pct = [], []
+    while True:
+        texto_completo = corpo.inner_text()
+        # "Resultados" aparece logo antes dos cards em ambas as visões — corta antes disso
+        # pra não pegar números soltos do cabeçalho (data de "Última Atualização", filtros).
+        corte = texto_completo.split("Resultados", 1)[-1]
+        # Corta antes de "Meta do Mês" (o gráfico de velocímetro logo abaixo dos cards
+        # também tem números que atrapalhariam a extração se fossem incluídos).
+        corte = corte.split("Meta do Mês")[0]
+        valores_pct = [parse_pct(v) for v in re.findall(r"-?[\d.,]+\s?%", corte)]
 
-    if len(valores_rs) < 7 or len(valores_pct) < 8:
-        raise RuntimeError(
-            f"Esperava >=7 valores principais e >=8 percentuais nos cards, achei "
-            f"{len(valores_rs)} e {len(valores_pct)}. Texto lido: {corte[:1000]!r}"
-        )
+        valores_rs_str = re.findall(r"-?R\$\s?[\d.,]+", corte)
+        if valores_rs_str:
+            valores_rs = [parse_valor_brl(v) for v in valores_rs_str]
+        else:
+            # Visão Pedidos: sem "R$". Remove os percentuais do texto primeiro (pra não
+            # confundir "4,6%" com um valor principal) e extrai os números simples restantes.
+            sem_pct = re.sub(r"-?[\d.,]+\s?%", "", corte)
+            valores_rs = [parse_valor_brl(v) for v in re.findall(r"-?\d[\d.]*\d|-?\d", sem_pct)]
+
+        if len(valores_rs) >= 7 and len(valores_pct) >= 8:
+            break
+        if time.monotonic() >= limite:
+            raise RuntimeError(
+                f"Esperava >=7 valores principais e >=8 percentuais nos cards, achei "
+                f"{len(valores_rs)} e {len(valores_pct)}. Texto lido: {corte[:1000]!r}"
+            )
+        pagina.wait_for_timeout(500)
+
     return {
         "realizado_mes": valores_rs[0],
         "mom_pct": valores_pct[0],
