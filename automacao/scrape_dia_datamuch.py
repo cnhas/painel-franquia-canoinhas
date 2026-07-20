@@ -336,6 +336,27 @@ def ler_cards_cupons(frame) -> dict:
     print(f"[debug ler_cards_cupons] svg text (via evaluate) 'Cupons por categoria': {dados_graficos.get('categoria')!r}")
     print(f"[debug ler_cards_cupons] svg text (via evaluate) 'Uso de Cupons': {dados_graficos.get('uso')!r}")
 
+    def _desduplicar_rotulo_svg(texto_rotulo: str) -> str:
+        """BUG REAL encontrado em 20/07/2026: mesmo pegando só o último
+        <tspan> de cada <text>, o texto ainda vem duplicado (ex:
+        "BebidasBebidas", "Combos Coca-…Combos Coca-Cola") — a duplicação é
+        mais profunda que tspans (provavelmente 2 tspans aninhados dentro do
+        último, um truncado com "…" pro layout visual + um completo pra
+        acessibilidade). Em vez de tentar caçar a estrutura exata do DOM,
+        detecta o ponto onde o texto "reinicia" (a 2ª metade é a versão
+        completa) e devolve só essa parte. Só chamado em nomes (não em
+        valores numéricos, que nunca vêm duplicados)."""
+        n = len(texto_rotulo)
+        for i in range(1, n):
+            primeira, segunda = texto_rotulo[:i], texto_rotulo[i:]
+            if len(segunda) < len(primeira):
+                continue
+            if primeira == segunda[: len(primeira)]:
+                return segunda
+            if primeira.endswith("…") and segunda.startswith(primeira[:-1]):
+                return segunda
+        return texto_rotulo
+
     def _extrair_pares_categoria_valor(rotulos: list) -> list:
         """Formato real confirmado via execução real (20/07/2026): a lista de
         <text> do gráfico de barras do Power BI NÃO alterna nome/valor par a
@@ -350,7 +371,7 @@ def ler_cards_cupons(frame) -> dict:
         if not limpos:
             return []
         corpo = limpos[1:]  # primeiro item é o rótulo do campo/título, descarta
-        nomes = [r for r in corpo if not re.match(r"^[\d.,]+$", r)]
+        nomes = [_desduplicar_rotulo_svg(r) for r in corpo if not re.match(r"^[\d.,]+$", r)]
         valores = [r for r in corpo if re.match(r"^[\d.,]+$", r)]
         n = min(len(nomes), len(valores))
         if len(nomes) != len(valores):
