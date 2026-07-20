@@ -288,6 +288,7 @@ def ler_cards_cupons(frame) -> dict:
     print(f"[debug ler_cards_cupons] bloco categoria achado: {bool(bloco_cat_match)}")
     if bloco_cat_match:
         linhas = [l.strip() for l in bloco_cat_match.group(1).split("\n") if l.strip()]
+        print(f"[debug ler_cards_cupons] linhas bloco categoria ({len(linhas)}): {linhas!r}")
         i = 0
         while i < len(linhas) - 1:
             if re.match(r"^[\d.,]+$", linhas[i + 1]):
@@ -305,6 +306,7 @@ def ler_cards_cupons(frame) -> dict:
     print(f"[debug ler_cards_cupons] bloco uso achado: {bool(bloco_uso_match)}")
     if bloco_uso_match:
         linhas = [l.strip() for l in bloco_uso_match.group(1).split("\n") if l.strip()]
+        print(f"[debug ler_cards_cupons] linhas bloco uso ({len(linhas)}): {linhas!r}")
         i = 0
         while i < len(linhas) - 1:
             if re.match(r"^[\d.,]+$", linhas[i + 1]):
