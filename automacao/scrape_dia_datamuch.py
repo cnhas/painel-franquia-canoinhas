@@ -328,87 +328,106 @@ def ler_cards_cupons(frame) -> dict:
     }
 
 
-def _ordenar_tabela_lojas(frame, coluna_texto: str):
-    """Clica no cabeçalho da coluna indicada até ficar em ordem decrescente.
-    Confirmado via teste manual: no relatório de Lojas, alternar cliques no
-    cabeçalho muda a ordenação; decrescente é o estado onde os maiores valores
-    aparecem primeiro (checado lendo a 1ª linha depois de cada clique)."""
-    cabecalho = frame.get_by_text(coluna_texto, exact=False).first
-    for _ in range(3):
-        cabecalho.click(timeout=NAV_TIMEOUT_MS)
-        _esperar(frame, 1000)
-        # Critério simples: se a primeira linha de dado tiver um valor em R$
-        # maior que a segunda, consideramos decrescente e paramos.
-        # (Verificação mais fina fica pra extração real das linhas, abaixo.)
-
-
-def ler_top_lojas(frame, ordenar_por: str, top_n: int = 10) -> list:
-    """ordenar_por: 'gmv' ou 'pedidos'. Extrai as top_n linhas da tabela
-    "Acompanhamento de Lojas" (aba Geral) já filtrada pro dia, ordenadas
-    decrescente pela coluna pedida.
-
-    Formato real por linha (confirmado via diagnóstico de execução real,
-    20/07/2026 — texto puro de dentro do iframe, uma "célula" por linha de
-    texto, exatamente 15 linhas por registro de loja, nessa ordem):
+def _extrair_registro_loja(linhas: list):
+    """Extrai {nome, gmv, pedidos} de um bloco de linhas de UM registro de
+    loja (já dividido no marcador "Selecionar Linha"). Formato real por linha
+    (confirmado via diagnóstico de execução real, 20/07/2026 — texto puro de
+    dentro do iframe, uma "célula" por linha de texto, exatamente 15 linhas
+    por registro de loja, nessa ordem):
       UF, id_cidade, cidade, id_empresa, empresa, status, categoria,
       "R$ gmv atual", "R$ gmv anterior", "pct% mom", "Formatação Condicional
       Adicional", pedidos_atual, pedidos_anterior, "pct% mom",
       "Formatação Condicional Adicional"
-    Cada registro é precedido por um marcador de texto "Selecionar Linha"
-    (rótulo de acessibilidade do Power BI pra seleção de linha da matriz) —
-    usado aqui como separador entre registros. Categoria e valores podem vir
-    como "\xa0" (nbsp) quando vazios/zerados."""
-    coluna_texto = "gmv (mês atual)" if ordenar_por == "gmv" else "pedidos (mês atual)"
-    _ordenar_tabela_lojas(frame, coluna_texto)
-    _esperar(frame, 1000)
+    Localiza a posição do status ("Publicada"/"Encerrada") como âncora — mais
+    tolerante a variação no nº de linhas do que índice fixo. Categoria e
+    valores podem vir como "\xa0" (nbsp) quando vazios/zerados (comum em
+    lojas "Encerrada", que legitimamente não têm valor no período filtrado)."""
+    idx_status = None
+    for i, l in enumerate(linhas):
+        if l in ("Publicada", "Encerrada"):
+            idx_status = i
+            break
+    if idx_status is None or idx_status < 1:
+        return None
+    nome = linhas[idx_status - 1].strip()
+    resto = linhas[idx_status + 1:]
+    valores_rs = [l for l in resto if l.startswith("R$") or l == "\xa0"]
+    gmv_str = valores_rs[0] if len(valores_rs) >= 1 else ""
+    pedidos_str = ""
+    achou_formatacao = False
+    for l in resto:
+        if "Formatação" in l:
+            achou_formatacao = True
+            continue
+        if achou_formatacao:
+            pedidos_str = l
+            break
+    if not nome or nome in ("\xa0",):
+        return None
+    gmv = parse_valor_brl(gmv_str) if gmv_str not in ("", "\xa0") else 0.0
+    pedidos = int(parse_valor_brl(pedidos_str)) if pedidos_str not in ("", "\xa0") else 0
+    return {"nome": nome, "gmv": round(gmv, 2), "pedidos": pedidos}
 
+
+def _ler_registros_tabela_lojas(frame) -> list:
+    """Lê TODOS os registros de loja atualmente renderizados na tabela
+    (independente da ordenação visual atual)."""
     texto = frame.locator("body").inner_text()
     partes = texto.split("Selecionar Linha")
-    print(f"[debug ler_top_lojas/{ordenar_por}] {len(partes)} partes encontradas.")
-    if len(partes) >= 2:
-        primeiras_linhas = [l for l in partes[1].split("\n") if l != ""]
-        print(f"[debug ler_top_lojas/{ordenar_por}] 1º registro ({len(primeiras_linhas)} linhas): {primeiras_linhas!r}")
-    resultado = []
+    registros = []
     for parte in partes[1:]:  # partes[0] é tudo antes do 1º marcador (cabeçalho etc)
         linhas = [l for l in parte.split("\n") if l != ""]
-        if len(linhas) < 12:
+        if len(linhas) < 6:
             continue
-        # Localiza a posição do status ("Publicada"/"Encerrada") como âncora —
-        # mais tolerante a variação no nº de linhas do que índice fixo.
-        idx_status = None
-        for i, l in enumerate(linhas):
-            if l in ("Publicada", "Encerrada"):
-                idx_status = i
-                break
-        if idx_status is None or idx_status < 1:
-            continue
-        nome = linhas[idx_status - 1].strip()
-        # A partir do status: [categoria] [R$ gmv atual] [R$ gmv anterior] [pct%]
-        # ["Formatação Condicional Adicional"] [pedidos atual] ...
-        resto = linhas[idx_status + 1:]
-        valores_rs = [l for l in resto if l.startswith("R$") or l == "\xa0"]
-        # pega os 2 primeiros valores "tipo R$" (podem vir como \xa0 se vazios)
-        gmv_str = valores_rs[0] if len(valores_rs) >= 1 else ""
-        # pedidos atual = 1º número puro (sem R$, sem %) depois do 1º "Formatação..."
-        pedidos_str = ""
-        achou_formatacao = False
-        for l in resto:
-            if "Formatação" in l:
-                achou_formatacao = True
-                continue
-            if achou_formatacao:
-                pedidos_str = l
-                break
-        if not nome or nome in ("\xa0",):
-            continue
-        gmv = parse_valor_brl(gmv_str) if gmv_str not in ("", "\xa0") else 0.0
-        pedidos = int(parse_valor_brl(pedidos_str)) if pedidos_str not in ("", "\xa0") else 0
-        resultado.append({"nome": nome, "gmv": round(gmv, 2), "pedidos": pedidos})
+        reg = _extrair_registro_loja(linhas)
+        if reg:
+            registros.append(reg)
+    return registros
 
-    print(f"[debug ler_top_lojas/{ordenar_por}] {len(resultado)} lojas parseadas; amostra: {resultado[:3]!r}")
-    chave = (lambda r: r["gmv"]) if ordenar_por == "gmv" else (lambda r: r["pedidos"])
-    resultado.sort(key=chave, reverse=True)
-    return resultado[:top_n]
+
+def _ordenar_tabela_lojas(frame, coluna_texto: str, chave: str, max_cliques: int = 5) -> list:
+    """Clica no cabeçalho da coluna indicada até a tabela ficar COMPROVADAMENTE
+    em ordem decrescente pela coluna pedida — não apenas um número fixo de
+    cliques.
+
+    BUG REAL encontrado e corrigido em 20/07/2026: a versão anterior clicava
+    3 vezes às cegas (sem checar nada) e às vezes deixava a tabela ordenada
+    errado — ex. o dia 19/07 ficou com um monte de lojas "Encerrada" (que
+    legitimamente têm gmv/pedidos vazios no período filtrado) no topo da
+    lista visível, gerando um "top 10" todo zerado. Agora confirma lendo e
+    comparando os valores reais extraídos depois de cada clique: só considera
+    "decrescente de verdade" quando o 1º valor é positivo e os primeiros
+    valores estão em ordem não-crescente."""
+    cabecalho = frame.get_by_text(coluna_texto, exact=False).first
+    ultima_leitura = []
+    for tentativa in range(max_cliques):
+        registros = _ler_registros_tabela_lojas(frame)
+        ultima_leitura = registros
+        valores = [r[chave] for r in registros[:5]]
+        if valores and valores[0] > 0 and valores == sorted(valores, reverse=True):
+            print(f"[debug _ordenar_tabela_lojas/{coluna_texto}] ordenação confirmada na tentativa {tentativa} (valores: {valores}).")
+            return registros
+        cabecalho.click(timeout=NAV_TIMEOUT_MS)
+        _esperar(frame, 1200)
+    print(f"[aviso] não confirmei ordenação decrescente de \"{coluna_texto}\" depois de {max_cliques} cliques; "
+          f"vou usar a última leitura e reordenar localmente mesmo assim.")
+    return ultima_leitura
+
+
+def ler_top_lojas(frame, ordenar_por: str, top_n: int = 10) -> list:
+    """ordenar_por: 'gmv' ou 'pedidos'. Extrai as top_n lojas da tabela
+    "Acompanhamento de Lojas" (aba Geral) já filtrada pro dia, ordenadas
+    decrescente pela coluna pedida. Clica no cabeçalho até confirmar
+    ordenação real (ver _ordenar_tabela_lojas) e SEMPRE reordena localmente
+    pelos valores parseados como garantia extra contra ordenação visual
+    errada."""
+    coluna_texto = "gmv (mês atual)" if ordenar_por == "gmv" else "pedidos (mês atual)"
+    chave = "gmv" if ordenar_por == "gmv" else "pedidos"
+    registros = _ordenar_tabela_lojas(frame, coluna_texto, chave)
+    registros = [r for r in registros if r["nome"] and r["nome"] != "\xa0"]
+    registros.sort(key=lambda r: r[chave], reverse=True)
+    print(f"[debug ler_top_lojas/{ordenar_por}] {len(registros)} lojas parseadas; amostra: {registros[:3]!r}")
+    return registros[:top_n]
 
 
 def coletar_dia(page, dia: date) -> dict:
