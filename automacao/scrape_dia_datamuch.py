@@ -312,7 +312,16 @@ def ler_cards_cupons(frame) -> dict:
                 }
                 function textosDe(container) {
                     if (!container) return [];
-                    return Array.from(container.querySelectorAll('svg text')).map(t => t.textContent);
+                    // Cada <text> do Power BI tem 2 <tspan> internos (um com
+                    // o rótulo truncado "...", outro com o texto completo,
+                    // pro tooltip/acessibilidade) — .textContent do <text>
+                    // concatena os dois (ex: "Combos Coca-…Combos Coca-Cola").
+                    // Pega só o texto do ÚLTIMO tspan (o completo).
+                    return Array.from(container.querySelectorAll('svg text')).map(t => {
+                        const tspans = t.querySelectorAll('tspan');
+                        if (tspans.length > 0) return tspans[tspans.length - 1].textContent;
+                        return t.textContent;
+                    });
                 }
                 return {
                     categoria: textosDe(acharContainer('Cupons por categoria')),
@@ -328,21 +337,25 @@ def ler_cards_cupons(frame) -> dict:
     print(f"[debug ler_cards_cupons] svg text (via evaluate) 'Uso de Cupons': {dados_graficos.get('uso')!r}")
 
     def _extrair_pares_categoria_valor(rotulos: list) -> list:
-        """A partir de uma lista plana de rótulos de eixo/valores de barra
-        (mistura de nomes de categoria e números, na ordem em que aparecem
-        no SVG), tenta parear nome->valor assumindo que vem um nome seguido
-        do valor da barra correspondente."""
-        pares = []
-        i = 0
-        while i < len(rotulos) - 1:
-            atual = (rotulos[i] or "").strip()
-            proximo = (rotulos[i + 1] or "").strip()
-            if atual and not re.match(r"^[\d.,]+$", atual) and re.match(r"^[\d.,]+$", proximo):
-                pares.append((atual, int(parse_valor_brl(proximo))))
-                i += 2
-            else:
-                i += 1
-        return pares
+        """Formato real confirmado via execução real (20/07/2026): a lista de
+        <text> do gráfico de barras do Power BI NÃO alterna nome/valor par a
+        par — vem em 2 blocos separados, na mesma ordem categórica: primeiro
+        um rótulo de campo/título da medida (ex: "Contagem de coupon_code",
+        "Pedidos Total" — não é dado, é descartado), depois TODOS os nomes de
+        categoria/código (eixo), e só depois TODOS os valores numéricos das
+        barras, na mesma ordem. Confirmado batendo a soma dos valores de "Uso
+        de Cupons" (4+1+1+2+63+3+15=89) com o total de "pedidos_cupom" já
+        validado pros cards do topo."""
+        limpos = [(r or "").strip() for r in rotulos if (r or "").strip()]
+        if not limpos:
+            return []
+        corpo = limpos[1:]  # primeiro item é o rótulo do campo/título, descarta
+        nomes = [r for r in corpo if not re.match(r"^[\d.,]+$", r)]
+        valores = [r for r in corpo if re.match(r"^[\d.,]+$", r)]
+        n = min(len(nomes), len(valores))
+        if len(nomes) != len(valores):
+            print(f"[aviso] _extrair_pares_categoria_valor: {len(nomes)} nomes vs {len(valores)} valores (esperava igual); usando só os {n} primeiros pares.")
+        return [(nomes[i], int(parse_valor_brl(valores[i]))) for i in range(n)]
 
     categorias = [{"categoria": c, "qtd": v} for c, v in _extrair_pares_categoria_valor(dados_graficos.get("categoria", []))]
     usos = [{"codigo": c, "pedidos": v} for c, v in _extrair_pares_categoria_valor(dados_graficos.get("uso", []))]
