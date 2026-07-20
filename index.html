@@ -1343,46 +1343,56 @@ function renderDay(){
   `;
 
   const p = d.painel;
-  document.getElementById('painelKpis').innerHTML = `
-    <div class="kpi navy">
-      <div class="value">${fmtInt(p.pedidos_totais)}</div>
-      <div class="label">Pedidos totais (Painel)</div>
-      <div class="sub">Fonte autoritativa</div>
-    </div>
-    <div class="kpi navy">
-      <div class="value">${fmtInt(p.cancelados)}</div>
-      <div class="label">Pedidos cancelados</div>
-      <div class="sub warn">${p.pct_cancelados.toFixed(1).replace('.',',')}% do total</div>
-    </div>
-    <div class="kpi navy">
-      <div class="value">${fmtInt(p.entrega)}</div>
-      <div class="label">Entregas</div>
-      <div class="sub good">${(p.entrega/p.pedidos_totais*100).toFixed(1).replace('.',',')}% do total</div>
-    </div>
-    <div class="kpi navy">
-      <div class="value">${fmtInt(p.retirada)}</div>
-      <div class="label">Retirada no local</div>
-      <div class="sub">${(p.retirada/p.pedidos_totais*100).toFixed(1).replace('.',',')}% do total</div>
-    </div>
-  `;
+  if(p){
+    document.getElementById('painelKpis').innerHTML = `
+      <div class="kpi navy">
+        <div class="value">${fmtInt(p.pedidos_totais)}</div>
+        <div class="label">Pedidos totais (Painel)</div>
+        <div class="sub">Fonte autoritativa</div>
+      </div>
+      <div class="kpi navy">
+        <div class="value">${fmtInt(p.cancelados)}</div>
+        <div class="label">Pedidos cancelados</div>
+        <div class="sub warn">${p.pct_cancelados.toFixed(1).replace('.',',')}% do total</div>
+      </div>
+      <div class="kpi navy">
+        <div class="value">${fmtInt(p.entrega)}</div>
+        <div class="label">Entregas</div>
+        <div class="sub good">${(p.entrega/p.pedidos_totais*100).toFixed(1).replace('.',',')}% do total</div>
+      </div>
+      <div class="kpi navy">
+        <div class="value">${fmtInt(p.retirada)}</div>
+        <div class="label">Retirada no local</div>
+        <div class="sub">${(p.retirada/p.pedidos_totais*100).toFixed(1).replace('.',',')}% do total</div>
+      </div>
+    `;
+  } else {
+    document.getElementById('painelKpis').innerHTML = `
+      <div class="note" style="grid-column:1/-1;">
+        Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não disponíveis para este dia — a automação atual só cobre os relatórios do Data Much. Fica como pendência.
+      </div>
+    `;
+  }
 
   renderLojas();
 
-  const maxCupom = Math.max(...d.cupons_uso.map(c=>c.pedidos));
-  document.getElementById('cuponsBars').innerHTML = d.cupons_uso.map(c=>`
+  const cuponsUso = d.cupons_uso || [];
+  const maxCupom = cuponsUso.length ? Math.max(...cuponsUso.map(c=>c.pedidos)) : 0;
+  document.getElementById('cuponsBars').innerHTML = cuponsUso.length ? cuponsUso.map(c=>`
     <div class="bar-row">
       <div class="bar-label">${c.codigo}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(c.pedidos/maxCupom*100).toFixed(0)}%"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${maxCupom ? (c.pedidos/maxCupom*100).toFixed(0) : 0}%"></div></div>
       <div class="bar-value">${c.pedidos}</div>
     </div>
-  `).join('');
+  `).join('') : '<div class="note">Sem dados de uso de cupons por campanha para este dia.</div>';
 
-  document.getElementById('categoriaLines').innerHTML = d.cupons_categoria.map(c=>`
+  const cuponsCategoria = d.cupons_categoria || [];
+  document.getElementById('categoriaLines').innerHTML = cuponsCategoria.length ? cuponsCategoria.map(c=>`
     <div class="stat-line"><span>${c.categoria}</span><b>${c.qtd}</b></div>
-  `).join('');
+  `).join('') : '<div class="note">Sem dados de cupons por categoria para este dia.</div>';
 
   const o = d.ofertas_de_por;
-  document.getElementById('ofertasBox').innerHTML = `
+  document.getElementById('ofertasBox').innerHTML = o ? `
     <div class="kpis" style="margin-bottom:16px;">
       <div class="kpi">
         <div class="value">${fmtInt(o.itens_vendidos)}</div>
@@ -1401,8 +1411,8 @@ function renderDay(){
         <div class="label">Subsídio pago pelas lojas</div>
       </div>
     </div>
-    <div>${o.destaques.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-  `;
+    <div>${(o.destaques||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+  ` : '<div class="note">Sem dados de Ofertas De/Por para este dia.</div>';
 
   document.getElementById('pendingBox').innerHTML = d.pendencias && d.pendencias.length
     ? d.pendencias.map(p=>`• ${p}`).join('<br>')
@@ -1411,7 +1421,7 @@ function renderDay(){
 
 function renderLojas(){
   const d = dataStore.dias[daySelect.value];
-  const list = lojaMode === 'gmv' ? d.top_lojas_gmv : d.top_lojas_pedidos;
+  const list = (lojaMode === 'gmv' ? d.top_lojas_gmv : d.top_lojas_pedidos) || [];
   document.getElementById('lojasBody').innerHTML = list.map((l,i)=>`
     <tr><td><span class="rank">${i+1}</span></td><td>${l.nome}</td><td><b>${fmtMoney(l.gmv)}</b></td><td>${l.pedidos}</td></tr>
   `).join('');
