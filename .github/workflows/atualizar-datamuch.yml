@@ -5,11 +5,22 @@
 #      dia nem abrem o navegador — só um pre-check rápido (~poucos segundos) que lê o
 #      arquivo e sai. Isso evita gastar minutos repetindo login+scraping sem necessidade.
 #   2. Quando não tem novidade, os passos de deploy/commit também não rodam.
+#
+# Trocado de Netlify pro GitHub Pages em 20/07/2026 (mesmo motivo do workflow do painel):
+# o Netlify passou a cobrar por publicação além de ~20/mês grátis.
 
 name: Atualizar Data Much
 
 permissions:
   contents: write
+  pages: write      # necessário pra publicar no GitHub Pages
+  id-token: write   # necessário pra actions/deploy-pages autenticar o deploy
+
+# Evita duas publicações no GitHub Pages rodando ao mesmo tempo (esse workflow e o do
+# painel podem disparar em horários próximos) — enfileira em vez de correr em paralelo.
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: false
 
 on:
   schedule:
@@ -23,6 +34,9 @@ jobs:
   atualizar:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
@@ -68,25 +82,23 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Cache do Netlify CLI
+      - name: Preparar pasta de publicação
         if: steps.coletar.outputs.mudou == 'true'
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm-global
-          key: netlify-cli-${{ runner.os }}
-
-      - name: Publicar no Netlify
-        if: steps.coletar.outputs.mudou == 'true'
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          mkdir -p ~/.npm-global
-          npm config set prefix "$HOME/.npm-global"
-          echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
-          export PATH="$HOME/.npm-global/bin:$PATH"
-          command -v netlify >/dev/null 2>&1 || npm install -g netlify-cli
-          netlify deploy --prod --dir=. --site="$NETLIFY_SITE_ID"
+          mkdir -p _site
+          cp index.html _site/
+          cp historico_vendas.json _site/ 2>/dev/null || true
+
+      - name: Preparar artefato pro GitHub Pages
+        if: steps.coletar.outputs.mudou == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publicar no GitHub Pages
+        if: steps.coletar.outputs.mudou == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Commitar mudanças de volta pro repositório
         if: steps.coletar.outputs.mudou == 'true'

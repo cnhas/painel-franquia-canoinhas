@@ -1,10 +1,24 @@
 # Roda o scraper de pedidos nos horários combinados (horário de Brasília, UTC-3) e publica
-# o dashboard atualizado no Netlify via CLI — sem navegador, sem PC ligado, 100% na nuvem.
+# o dashboard atualizado no GitHub Pages — sem navegador, sem PC ligado, 100% na nuvem.
+#
+# Trocado de Netlify pro GitHub Pages em 20/07/2026: o Netlify mudou pra plano de créditos
+# (free = ~20 publicações/mês) e essa automação publica dezenas de vezes por dia, muito
+# além do grátis. GitHub Pages não cobra por publicação (só tem um limite informal de ~10
+# por hora, bem acima da nossa frequência máxima de 1 a cada 15 min = 4/hora).
 
 name: Atualizar painel franquia
 
 permissions:
   contents: write  # necessário pra job conseguir dar git push de volta pro repositório
+  pages: write      # necessário pra publicar no GitHub Pages
+  id-token: write   # necessário pra actions/deploy-pages autenticar o deploy
+
+# Evita duas publicações no GitHub Pages rodando ao mesmo tempo (esse workflow e o do Data
+# Much podem disparar em horários próximos) — enfileira em vez de deixar correr em paralelo
+# e corromper o deploy.
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: false
 
 on:
   schedule:
@@ -28,6 +42,9 @@ jobs:
   atualizar:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
@@ -58,24 +75,20 @@ jobs:
           PAINEL_SENHA: ${{ secrets.PAINEL_SENHA }}
         run: python automacao/scrape_pedidos.py
 
-      - name: Cache do Netlify CLI
-        id: cache-netlify-cli
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm-global
-          key: netlify-cli-${{ runner.os }}
-
-      - name: Publicar no Netlify
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      - name: Preparar pasta de publicação
         run: |
-          mkdir -p ~/.npm-global
-          npm config set prefix "$HOME/.npm-global"
-          echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
-          export PATH="$HOME/.npm-global/bin:$PATH"
-          command -v netlify >/dev/null 2>&1 || npm install -g netlify-cli
-          netlify deploy --prod --dir=. --site="$NETLIFY_SITE_ID"
+          mkdir -p _site
+          cp index.html _site/
+          cp historico_vendas.json _site/ 2>/dev/null || true
+
+      - name: Preparar artefato pro GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Commitar mudanças de volta pro repositório
         run: |
