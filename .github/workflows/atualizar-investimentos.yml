@@ -1,0 +1,93 @@
+# Coleta os 4 componentes de "Investimentos da Franquia" (Ofertas De/Por,
+# Cupom subsídio franquia, Cupom 50% compartilhado, Entrega promocional) no
+# Data Much, sempre olhando o mês corrente até ontem, e atualiza a seção
+# "investimentos" do painel. Guilherme pediu explicitamente (21/07/2026) que
+# isso rode TODOS OS DIAS junto com a atualização normal do Data Much - é a
+# métrica que ele chamou de mais importante do painel.
+#
+# Ainda em fase de testes (criado em 21/07/2026) — ver comentários no topo de
+# automacao/coletar_investimentos.py sobre o que foi validado manualmente vs.
+# o que ainda pode precisar de ajuste de seletor numa primeira rodada real
+# (mesmo processo iterativo já usado pros outros scrapers deste projeto).
+
+name: Atualizar investimentos da franquia
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache do navegador Playwright (Chromium)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}
+
+      - name: Instalar dependências Python
+        run: pip install playwright
+
+      - name: Instalar navegador + libs do sistema (Playwright)
+        run: playwright install --with-deps chromium
+
+      - name: Coletar investimentos da franquia
+        id: coletar
+        env:
+          DATAMUCH_EMAIL: ${{ secrets.DATAMUCH_EMAIL }}
+          DATAMUCH_SENHA: ${{ secrets.DATAMUCH_SENHA }}
+        run: python automacao/coletar_investimentos.py
+
+      - name: Publicar screenshots de erro (se der falha)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: erro-debug-investimentos
+          path: erro_investimentos_*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Commitar mudanças de volta pro repositório
+        run: |
+          git config user.name "investimentos-bot"
+          git config user.email "investimentos-bot@users.noreply.github.com"
+          git add index.html historico_vendas.json
+          git diff --cached --quiet || git commit -m "Atualiza investimentos da franquia [manual]"
+          git pull --rebase origin main
+          git push
+
+      - name: Preparar pasta de publicação
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp historico_vendas.json _site/ 2>/dev/null || true
+
+      - name: Preparar artefato pro GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
