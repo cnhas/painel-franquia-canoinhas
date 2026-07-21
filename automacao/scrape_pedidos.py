@@ -113,11 +113,23 @@ def coletar_pedidos_hoje(page) -> dict:
 
     selecionar_100_por_pagina(page)
 
-    # Confirma o texto "Exibindo 1 a X de Y resultados." pra pegar o total.
-    resumo_locator = page.get_by_text(re.compile(r"Exibindo \d+ a \d+ de \d+ resultados"))
+    # #orders-table_info e o elemento de resumo do DataTables - usamos o id (estavel)
+    # em vez do texto, porque o texto muda de idioma dependendo se ha resultados ou nao.
+    # Com pedidos: "Exibindo 1 a 10 de 41 resultados." Sem pedidos (dia zerado): o site
+    # nunca traduziu o sInfoEmpty, entao cai no padrao em ingles da lib DataTables:
+    # "Showing 0 to 0 of 0 entries". Bug real descoberto em 21/07/2026 (causava timeout
+    # eterno esperando um texto em portugues que nunca aparece quando o dia esta zerado).
+    resumo_locator = page.locator("#orders-table_info")
     resumo_locator.wait_for(state="visible", timeout=NAV_TIMEOUT_MS)
     resumo = resumo_locator.inner_text()
-    total_pedidos = int(re.search(r"de (\d+) resultados", resumo).group(1))
+    match_pt = re.search(r"de (\d+) resultados", resumo)
+    match_en = re.search(r"of (\d+) entries", resumo)
+    if match_pt:
+        total_pedidos = int(match_pt.group(1))
+    elif match_en:
+        total_pedidos = int(match_en.group(1))
+    else:
+        raise RuntimeError(f"Nao consegui extrair o total de #orders-table_info: texto inesperado {resumo!r}")
 
     # "table tbody tr" sozinho também pega linhas do calendarinho do seletor de datas (que
     # fica sempre no DOM, só escondido) — filtra só linhas que têm "R$" (ou seja, pedidos de
