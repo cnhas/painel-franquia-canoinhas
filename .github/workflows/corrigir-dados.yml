@@ -3,6 +3,12 @@
 # sandbox usado pelo Claude não tem acesso de rede pro GitHub (só o navegador tem), então
 # scripts de correção de dados precisam rodar aqui, num runner do GitHub Actions, que tem
 # rede completa.
+#
+# IMPORTANTE: este workflow NÃO consegue commitar mudanças em arquivos dentro de
+# .github/workflows/ — o GITHUB_TOKEN default do GitHub Actions bloqueia isso por segurança
+# (não tem como conceder essa permissão via "permissions:", é uma restrição de escopo OAuth
+# do próprio token, não contornável daqui). Scripts de correção que precisem mexer em
+# workflows têm que ser aplicados manualmente via edição direta no GitHub.
 
 name: Corrigir dados (manual)
 
@@ -10,7 +16,6 @@ permissions:
   contents: write
   pages: write
   id-token: write
-  workflows: write
 
 concurrency:
   group: "pages-deploy"
@@ -47,7 +52,7 @@ jobs:
         run: |
           git config user.name "correcao-bot"
           git config user.email "correcao-bot@users.noreply.github.com"
-          git add -A
+          git add -A -- . ':!.github/workflows'
           git diff --cached --quiet || git commit -m "Correção manual de dados: ${{ inputs.script }}"
           git pull --rebase origin main
           git push
