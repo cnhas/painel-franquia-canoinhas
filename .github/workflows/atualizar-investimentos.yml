@@ -22,6 +22,10 @@ concurrency:
   cancel-in-progress: false
 
 on:
+  schedule:
+      # Roda 1x/dia, um pouco depois do workflow "Atualizar dias" (19h UTC),
+          # pra evitar os dois brigando pelo mesmo commit/deploy ao mesmo tempo.
+              - cron: '20 19 * * *'
   workflow_dispatch: {}
 
 jobs:
