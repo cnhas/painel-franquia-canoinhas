@@ -1296,13 +1296,13 @@ const dataStore = {
     },
     {
       "nome": "Entrega promocional — subsídio franquia",
-      "valor": 92.8,
-      "obs": "01/07/2026 a 20/07/2026 · maior valor da coluna por loja (assume 0 se o maior for 0)"
+      "valor": 0.0,
+      "obs": "Revertido em 21/07/2026: um valor de R$92,80 tinha sido gravado por engano (era o maior valor de 1 loja só, não a soma de todas as lojas). Até a automação somar a coluna inteira, fica em 0,00 com pendência explícita — NÃO necessariamente o valor real (pode ser > 0)."
     }
   ],
-  "total_confirmado": 3179.54,
+  "total_confirmado": 3086.74,
   "pendencias": [
-    "Por loja: só 'entrega promocional' está detalhada por loja até agora — De/Por e Cupom aparecem só no total do período.",
+    "\"Entrega promocional — subsídio franquia\": o valor real deste componente é DESCONHECIDO no momento (não é necessariamente 0) — a automação ainda só consegue detectar com segurança quando o total é 0 (todas as lojas zeradas); quando alguma loja tem valor > 0, ainda não soma a coluna inteira, então prefere não gravar um número que poderia estar errado.",
     "Por campanha: ainda não há uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
   ]
 }
