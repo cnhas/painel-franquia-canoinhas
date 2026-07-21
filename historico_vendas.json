@@ -823,16 +823,16 @@
   },
   {
     "data": "2026-07-19",
-    "pedidos_cupom": 89,
-    "gmv_cupom": 7470.71,
-    "desconto_total": 737.91,
-    "ticket_medio_cupom": 83.94,
-    "gmv_por_cupom": 10.12,
-    "lojas_unicas_cupom": 38,
+    "pedidos_cupom": 88,
+    "gmv_cupom": 7398.91,
+    "desconto_total": 727.91,
+    "ticket_medio_cupom": 84.08,
+    "gmv_por_cupom": 10.16,
+    "lojas_unicas_cupom": 37,
     "cupons_categoria": [
       {
         "categoria": "Bebidas",
-        "qtd": 77
+        "qtd": 76
       },
       {
         "categoria": "Combos Coca-Cola",
@@ -840,7 +840,7 @@
       },
       {
         "categoria": "Bom e Barato",
-        "qtd": 57
+        "qtd": 56
       },
       {
         "categoria": "Seleção de Ofertas",
@@ -848,15 +848,15 @@
       },
       {
         "categoria": "Combão com Desconto",
-        "qtd": 40
-      },
-      {
-        "categoria": "Ofertas",
         "qtd": 37
       },
       {
+        "categoria": "Ofertas",
+        "qtd": 34
+      },
+      {
         "categoria": "Porções",
-        "qtd": 35
+        "qtd": 40
       },
       {
         "categoria": "Maratona do Consumidor",
@@ -866,7 +866,7 @@
     "cupons_uso": [
       {
         "codigo": "#MUCH20",
-        "pedidos": 4
+        "pedidos": 3
       },
       {
         "codigo": "BAVARIA",
@@ -903,119 +903,119 @@
     },
     "top_lojas_gmv": [
       {
-        "nome": "Plantão da Cerveja",
-        "gmv": 215.83,
-        "pedidos": 2
+        "nome": "Garajão do Dog - Centro",
+        "gmv": 1136.02,
+        "pedidos": 12
       },
       {
-        "nome": "Speed Conveniência e Lanches",
-        "gmv": 161.55,
-        "pedidos": 2
+        "nome": "Top'z Burger",
+        "gmv": 1068.48,
+        "pedidos": 12
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 935.98,
+        "pedidos": 10
+      },
+      {
+        "nome": "Safanelli Pizzaria Express",
+        "gmv": 832.0,
+        "pedidos": 9
+      },
+      {
+        "nome": "Do Pedro Burguer",
+        "gmv": 736.7,
+        "pedidos": 7
+      },
+      {
+        "nome": "1005 Food's",
+        "gmv": 705.99,
+        "pedidos": 7
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 705.3,
+        "pedidos": 13
+      },
+      {
+        "nome": "Top Gelado Delivery - Açaí e Lanches",
+        "gmv": 689.18,
+        "pedidos": 15
       },
       {
         "nome": "Ideal Hamburgueria",
-        "gmv": 123.25,
-        "pedidos": 1
+        "gmv": 663.96,
+        "pedidos": 6
       },
       {
-        "nome": "Ideal Conveniência",
-        "gmv": 90.0,
-        "pedidos": 1
-      },
-      {
-        "nome": "Conveniência Corujão",
-        "gmv": 59.33,
-        "pedidos": 1
-      },
-      {
-        "nome": "Bavaria Lanches,a",
-        "gmv": 0.0,
-        "pedidos": 0
-      },
-      {
-        "nome": "Salapot Food",
-        "gmv": 0.0,
-        "pedidos": 0
-      },
-      {
-        "nome": "King's Pizza",
-        "gmv": 0.0,
-        "pedidos": 0
-      },
-      {
-        "nome": "Chef Burguer Grill",
-        "gmv": 0.0,
-        "pedidos": 0
-      },
-      {
-        "nome": "Cantinho do Açaí",
-        "gmv": 0.0,
-        "pedidos": 0
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 660.21,
+        "pedidos": 10
       }
     ],
     "top_lojas_pedidos": [
       {
-        "nome": "Plantão da Cerveja",
-        "gmv": 215.83,
-        "pedidos": 2
+        "nome": "Top Gelado Delivery - Açaí e Lanches",
+        "gmv": 689.18,
+        "pedidos": 15
       },
       {
-        "nome": "Speed Conveniência e Lanches",
-        "gmv": 161.55,
-        "pedidos": 2
+        "nome": "Bom Apetite",
+        "gmv": 705.3,
+        "pedidos": 13
       },
       {
-        "nome": "Ideal Hamburgueria",
-        "gmv": 123.25,
-        "pedidos": 1
+        "nome": "Garajão do Dog - Centro",
+        "gmv": 1136.02,
+        "pedidos": 12
       },
       {
-        "nome": "Ideal Conveniência",
-        "gmv": 90.0,
-        "pedidos": 1
+        "nome": "Top'z Burger",
+        "gmv": 1068.48,
+        "pedidos": 12
       },
       {
-        "nome": "Conveniência Corujão",
-        "gmv": 59.33,
-        "pedidos": 1
+        "nome": "Fredie's Burguer",
+        "gmv": 935.98,
+        "pedidos": 10
       },
       {
-        "nome": "Bavaria Lanches,a",
-        "gmv": 0.0,
-        "pedidos": 0
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 660.21,
+        "pedidos": 10
       },
       {
-        "nome": "Salapot Food",
-        "gmv": 0.0,
-        "pedidos": 0
+        "nome": "Safanelli Pizzaria Express",
+        "gmv": 832.0,
+        "pedidos": 9
       },
       {
-        "nome": "King's Pizza",
-        "gmv": 0.0,
-        "pedidos": 0
+        "nome": "PIZZA EXPRESS",
+        "gmv": 613.0,
+        "pedidos": 8
       },
       {
-        "nome": "Chef Burguer Grill",
-        "gmv": 0.0,
-        "pedidos": 0
+        "nome": "Do Pedro Burguer",
+        "gmv": 736.7,
+        "pedidos": 7
       },
       {
-        "nome": "Cantinho do Açaí",
-        "gmv": 0.0,
-        "pedidos": 0
+        "nome": "1005 Food's",
+        "gmv": 705.99,
+        "pedidos": 7
       }
     ],
     "pendencias": [
       "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much."
     ],
-    "gmv_dia": 18339.61,
-    "meta_dia": 18314,
     "comparativo_mes_anterior": {
       "dia_mes_anterior": "2026-06-19",
       "gmv_mes_anterior": 24488.09,
-      "meta_mes_anterior": 26250,
-      "variacao_pct": -25.11
-    }
+      "meta_mes_anterior": 26250.0,
+      "variacao_pct": -25.4
+    },
+    "gmv_dia": 18339.61,
+    "meta_dia": 18314
   }
 ],
   "investimentos": {
