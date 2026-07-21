@@ -1217,7 +1217,7 @@
   "investimentos": {
   "periodo": "01/07/2026 a 20/07/2026",
   "atualizado_em": "2026-07-21",
-  "verificacao_dados_recentes": "Atualizado automaticamente em 21/07/2026 13:23 pela rotina diária. Cobre 01/07/2026 a 20/07/2026.",
+  "verificacao_dados_recentes": "Atualizado automaticamente em 21/07/2026 19:33 pela rotina diária. Cobre 01/07/2026 a 20/07/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
   "componentes": [
     {
       "nome": "Ofertas De/Por — subsídio franquia",
@@ -1242,7 +1242,8 @@
   ],
   "total_confirmado": 3086.74,
   "pendencias": [
-    "\"Entrega promocional — subsídio franquia\": o valor real deste componente é DESCONHECIDO no momento (não é necessariamente 0) — a automação ainda só consegue detectar com segurança quando o total é 0 (todas as lojas zeradas); quando alguma loja tem valor > 0, ainda não soma a coluna inteira, então prefere não gravar um número que poderia estar errado.",
+    "\"Entrega promocional — subsídio franquia\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 0.0), pode estar desatualizado.",
+    "Por loja: só 'entrega promocional' está detalhada por loja até agora — De/Por e Cupom aparecem só no total do período.",
     "Por campanha: ainda não há uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
   ]
 },
