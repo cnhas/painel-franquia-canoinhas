@@ -198,10 +198,20 @@ def main():
         except PlaywrightTimeoutError as e:
             print(f"::error::Timeout esperando elemento — provavelmente um seletor mudou: {e}")
             page.screenshot(path="erro_debug.png")
+            try:
+                Path("erro_debug.html").write_text(page.content(), encoding="utf-8")
+                print("Salvo erro_debug.html com o HTML da página no momento da falha.")
+            except Exception as e2:
+                print(f"::warning::Não consegui salvar erro_debug.html: {e2}")
             sys.exit(1)
         except RuntimeError as e:
             print(f"::error::{e}")
             page.screenshot(path="erro_login.png")
+            try:
+                Path("erro_login.html").write_text(page.content(), encoding="utf-8")
+                print("Salvo erro_login.html com o HTML da página no momento da falha.")
+            except Exception as e2:
+                print(f"::warning::Não consegui salvar erro_login.html: {e2}")
             sys.exit(1)
         finally:
             browser.close()
