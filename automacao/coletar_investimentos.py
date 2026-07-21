@@ -328,9 +328,31 @@ def ler_maior_entrega_promocional_franquia(frame) -> float:
     m = re.search(r"R\$\s?([\d.,]+)", resto)
     if not m:
         # Célula em branco na 1ª linha depois de ordenar decrescente = maior
-        # valor é 0 (ou a coluna está vazia) - trata como 0.
+        # valor é 0 (ou a coluna está vazia) - trata como 0 (== soma total,
+        # já que nenhuma loja pode ter valor negativo).
         return 0.0
-    return round(parse_valor_brl(m.group(1)), 2)
+
+    maior_valor = round(parse_valor_brl(m.group(1)), 2)
+
+    # BUG REAL encontrado e corrigido em 21/07/2026 (3ª rodada de teste): a
+    # 1ª versão retornava esse "maior valor" como se FOSSE o total da coluna
+    # - errado! O maior valor de UMA loja não é a soma de TODAS as lojas.
+    # A suposição "maior valor == total" só é válida quando o maior valor é
+    # 0 (não tem como somar valores negativos e chegar em algo > 0). Quando
+    # o maior valor é > 0 (aconteceu na prática: R$92,80 numa rodada real),
+    # NÃO temos como confiar nesse número como total sem somar loja por loja
+    # (o que exigiria rolar a tabela inteira pra baixo e não foi
+    # implementado ainda) - então trata como falha, pra não gravar um total
+    # errado (provavelmente subestimado) no painel.
+    if maior_valor > 0:
+        raise RuntimeError(
+            f"Detectei um valor NÃO-ZERO (R$ {maior_valor}) na coluna 'entrega promocional - "
+            f"subsídio franquia' - não dá pra confiar que esse é o TOTAL (é só o maior valor de "
+            f"uma loja), e somar todas as lojas ainda não foi automatizado. Faltando implementar: "
+            f"somar a coluna inteira (rolando a tabela pra baixo) em vez de só olhar o topo."
+        )
+
+    return maior_valor
 
 
 def obter_periodo_mes_atual() -> tuple:
