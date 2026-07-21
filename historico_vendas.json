@@ -1021,7 +1021,7 @@
   "investimentos": {
   "periodo": "01/07/2026 a 20/07/2026",
   "atualizado_em": "2026-07-21",
-  "verificacao_dados_recentes": "Atualizado automaticamente em 21/07/2026 13:01 pela rotina diária. Cobre 01/07/2026 a 20/07/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
+  "verificacao_dados_recentes": "Atualizado automaticamente em 21/07/2026 13:11 pela rotina diária. Cobre 01/07/2026 a 20/07/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
   "componentes": [
     {
       "nome": "Ofertas De/Por — subsídio franquia",
@@ -1030,13 +1030,13 @@
     },
     {
       "nome": "Cupom — subsídio franquia (direto)",
-      "valor": 286.94,
-      "obs": "01–16/07 · filtro Subsídio = Franquia"
+      "valor": 380.94,
+      "obs": "01/07/2026 a 20/07/2026 · filtro Subsídio = Franquia"
     },
     {
       "nome": "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia",
-      "valor": 730.37,
-      "obs": "50% de R$ 1.460,74 · 01–16/07"
+      "valor": 970.8,
+      "obs": "50% de R$ 1941.60 · 01/07/2026 a 20/07/2026"
     },
     {
       "nome": "Entrega promocional — subsídio franquia",
@@ -1044,10 +1044,8 @@
       "obs": "Mês completo · inclui variante 'com pedido mínimo' (ambas zeradas)"
     }
   ],
-  "total_confirmado": 2752.31,
+  "total_confirmado": 3086.74,
   "pendencias": [
-    "\"Cupom — subsídio franquia (direto)\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 286.94), pode estar desatualizado.",
-    "\"Cupom — 50% do subsídio compartilhado Franqueadora + Franquia\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 730.37), pode estar desatualizado.",
     "\"Entrega promocional — subsídio franquia\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 0.0), pode estar desatualizado.",
     "Por loja: só 'entrega promocional' está detalhada por loja até agora — De/Por e Cupom aparecem só no total do período.",
     "Por campanha: ainda não há uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
