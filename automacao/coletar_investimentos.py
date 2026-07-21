@@ -133,26 +133,9 @@ def _fechar_overlay_calendario(frame):
         pass
 
 
-def selecionar_intervalo(frame, inicio: date, fim: date):
-    """Igual a selecionar_dia_unico() de scrape_dia_datamuch.py, mas com
-    datas de início/fim DIFERENTES (intervalo, não um único dia) - pra
-    filtrar "mês corrente até ontem" em vez de isolar um dia."""
-    abrir_painel_filtro(frame)
-    campo_inicio = frame.get_by_label(re.compile("Data de in[íi]cio", re.I)).first
-    campo_fim = frame.get_by_label(re.compile(r"Data de t[ée]rmino", re.I)).first
-
-    campo_inicio.fill(inicio.strftime("%d/%m/%Y"))
-    campo_inicio.press("Tab")
-    _esperar(frame, 500)
-    _fechar_overlay_calendario(frame)
-    _esperar(frame, 500)
-
-    campo_fim.fill(fim.strftime("%d/%m/%Y"))
-    campo_fim.press("Tab")
-    _esperar(frame, 500)
-    _fechar_overlay_calendario(frame)
-    _esperar(frame, 1500)
-
+def _fechar_painel_filtro(frame):
+    """Fecha o painel de filtro (mesma lógica de fechamento usada em
+    selecionar_dia_unico() de scrape_dia_datamuch.py)."""
     for estrategia in (
         lambda: frame.get_by_role("button", name=re.compile("fechar", re.I)).first,
         lambda: frame.locator('[aria-label*="echar" i]').first,
@@ -171,16 +154,82 @@ def selecionar_intervalo(frame, inicio: date, fim: date):
     _esperar(frame, 1500)
 
 
-def selecionar_subsidio_unico(frame, valor: str):
-    """Abre o dropdown multi-select "Subsídio" (dentro do painel de filtro já
-    aberto por selecionar_intervalo()), desmarca "Selecionar tudo" (que vem
-    marcado por padrão = todos selecionados) e marca só a opção pedida (ex:
-    "Franquia" ou "Franqueadora e Franquia"). Opções confirmadas manualmente
-    em 21/07/2026: Franqueadora, Franqueadora e Franquia, Franquia, Franquia
-    e Loja, Loja."""
-    campo = frame.get_by_label(re.compile("Subs[íi]dio", re.I)).first
-    campo.click(timeout=15000)
+def selecionar_intervalo(frame, inicio: date, fim: date, subsidio: str = None):
+    """Igual a selecionar_dia_unico() de scrape_dia_datamuch.py, mas com
+    datas de início/fim DIFERENTES (intervalo, não um único dia) - pra
+    filtrar "mês corrente até ontem" em vez de isolar um dia.
+
+    BUG REAL encontrado na 1ª rodada de teste (21/07/2026, run #1 do
+    workflow "Atualizar investimentos da franquia"): a versão anterior desta
+    função FECHAVA o painel de filtro no final, e só depois disso o código
+    tentava abrir o dropdown "Subsídio" - que a essa altura já não estava
+    mais visível (painel fechado), causando timeout. Corrigido: se
+    `subsidio` for passado, configura o filtro de Subsídio ANTES de fechar o
+    painel (dentro da mesma "sessão" do painel aberto)."""
+    abrir_painel_filtro(frame)
+    campo_inicio = frame.get_by_label(re.compile("Data de in[íi]cio", re.I)).first
+    campo_fim = frame.get_by_label(re.compile(r"Data de t[ée]rmino", re.I)).first
+
+    campo_inicio.fill(inicio.strftime("%d/%m/%Y"))
+    campo_inicio.press("Tab")
     _esperar(frame, 500)
+    _fechar_overlay_calendario(frame)
+    _esperar(frame, 500)
+
+    campo_fim.fill(fim.strftime("%d/%m/%Y"))
+    campo_fim.press("Tab")
+    _esperar(frame, 500)
+    _fechar_overlay_calendario(frame)
+    _esperar(frame, 1500)
+
+    if subsidio is not None:
+        selecionar_subsidio_unico(frame, subsidio)
+
+    _fechar_painel_filtro(frame)
+
+
+def selecionar_subsidio_unico(frame, valor: str):
+    """Abre o dropdown multi-select "Subsídio" (o painel de filtro precisa
+    JÁ ESTAR ABERTO - chamado de dentro de selecionar_intervalo(), antes do
+    painel fechar), desmarca "Selecionar tudo" (que vem marcado por padrão =
+    todos selecionados) e marca só a opção pedida (ex: "Franquia" ou
+    "Franqueadora e Franquia"). Opções confirmadas manualmente em
+    21/07/2026: Franqueadora, Franqueadora e Franquia, Franquia, Franquia e
+    Loja, Loja.
+
+    Tenta múltiplas estratégias pra abrir o dropdown (mesmo espírito de
+    abrir_painel_filtro), já que não foi possível confirmar de antemão se o
+    campo tem aria-label "Subsídio" de verdade (1ª tentativa real deu
+    timeout nisso)."""
+    estrategias = [
+        lambda: frame.get_by_label(re.compile("Subs[íi]dio", re.I)).first,
+        lambda: frame.locator('[aria-label*="ubs" i]').first,
+        lambda: frame.get_by_text("Subsídio", exact=True).first.locator(
+            "xpath=following::*[self::mat-select or contains(@class,'select') or contains(@class,'dropdown')][1]"
+        ),
+    ]
+    ultimo_erro = None
+    aberto = False
+    for estrategia in estrategias:
+        try:
+            campo = estrategia()
+            campo.click(timeout=10000)
+            frame.get_by_text("Selecionar tudo", exact=True).first.wait_for(state="visible", timeout=8000)
+            aberto = True
+            break
+        except Exception as e:
+            ultimo_erro = e
+            continue
+    if not aberto:
+        try:
+            aria_labels = frame.locator("[aria-label]").evaluate_all(
+                "els => els.map(e => e.getAttribute('aria-label')).filter((v,i,a) => a.indexOf(v)===i).slice(0, 80)"
+            )
+            print(f"[debug selecionar_subsidio_unico] aria-labels únicos no painel: {aria_labels}")
+        except Exception as e2:
+            print(f"[debug selecionar_subsidio_unico] não consegui listar aria-labels: {e2}")
+        raise RuntimeError(f"Não consegui abrir o dropdown 'Subsídio' por nenhuma estratégia. Último erro: {ultimo_erro}")
+
     frame.get_by_text("Selecionar tudo", exact=True).first.click(timeout=10000)
     _esperar(frame, 300)
     frame.get_by_text(valor, exact=True).first.click(timeout=10000)
@@ -231,18 +280,44 @@ def ler_maior_entrega_promocional_franquia(frame) -> float:
     (2 cliques no cabeçalho) e lê o maior valor. Como subsídio nunca é
     negativo, se o MAIOR valor da coluna for 0, o TOTAL da coluna também é 0
     - suposição validada com o histórico real (essa coluna sempre veio
-    zerada em todas as coletas manuais feitas até 21/07/2026)."""
-    cabecalho = frame.get_by_text("entrega promocional - subsidio franquia", exact=False).first
-    cabecalho.click(timeout=NAV_TIMEOUT_MS)
-    _esperar(frame, 1200)
-    cabecalho.click(timeout=NAV_TIMEOUT_MS)
-    _esperar(frame, 1200)
+    zerada em todas as coletas manuais feitas até 21/07/2026).
+
+    BUG REAL encontrado na 1ª rodada de teste (21/07/2026): timeout de 45s
+    tentando achar o texto exato do cabeçalho. Duas causas prováveis: (a) o
+    texto visual pode ser renderizado com capitalização diferente da do DOM
+    (CSS text-transform); (b) a coluna só fica visível rolando a tabela pra
+    direita. Corrigido: busca case-insensitive via regex, tenta rolar a
+    tabela pra direita antes de procurar, e despeja o texto do body como
+    diagnóstico se mesmo assim não achar."""
+    padrao_cabecalho = re.compile(r"entrega\s+promocional\s*-\s*subs[ií]dio\s+franquia", re.I)
+
+    try:
+        frame.locator("body").evaluate(
+            "() => { const el = Array.from(document.querySelectorAll('*'))"
+            ".find(e => e.scrollWidth > e.clientWidth && e.children.length > 0);"
+            " if (el) el.scrollLeft = el.scrollWidth; }"
+        )
+        _esperar(frame, 800)
+    except Exception as e:
+        print(f"[debug ler_maior_entrega_promocional_franquia] não consegui rolar a tabela: {e}")
+
+    try:
+        cabecalho = frame.get_by_text(padrao_cabecalho).first
+        cabecalho.click(timeout=NAV_TIMEOUT_MS)
+        _esperar(frame, 1200)
+        cabecalho.click(timeout=NAV_TIMEOUT_MS)
+        _esperar(frame, 1200)
+    except Exception as e:
+        texto_diag = frame.locator("body").inner_text()[:2500]
+        print(f"[debug ler_maior_entrega_promocional_franquia] não achei/cliquei no cabeçalho. "
+              f"Texto do body (2500 primeiros chars): {texto_diag!r}")
+        raise RuntimeError(f"Não consegui ordenar pela coluna 'entrega promocional - subsídio franquia': {e}")
 
     texto = frame.locator("body").inner_text()
-    pos_cabecalho = texto.find("entrega promocional - subsidio franquia")
-    if pos_cabecalho == -1:
-        raise RuntimeError("Não encontrei o cabeçalho da coluna 'entrega promocional - subsidio franquia' depois de ordenar.")
-    resto = texto[pos_cabecalho + len("entrega promocional - subsidio franquia"):]
+    m_cab = padrao_cabecalho.search(texto)
+    if not m_cab:
+        raise RuntimeError("Não encontrei o cabeçalho da coluna 'entrega promocional - subsídio franquia' depois de ordenar.")
+    resto = texto[m_cab.end():]
     m = re.search(r"R\$\s?([\d.,]+)", resto)
     if not m:
         # Célula em branco na 1ª linha depois de ordenar decrescente = maior
@@ -313,8 +388,7 @@ def coletar_investimentos(historico_atual: dict) -> dict:
             nome2 = "Cupom — subsídio franquia (direto)"
             try:
                 frame = obter_frame(page, URL_CUPONS)
-                selecionar_intervalo(frame, inicio, ontem)
-                selecionar_subsidio_unico(frame, "Franquia")
+                selecionar_intervalo(frame, inicio, ontem, subsidio="Franquia")
                 valor = ler_desconto_total(frame)
                 componentes.append({"nome": nome2, "valor": valor, "obs": f"{periodo_str} · filtro Subsídio = Franquia"})
                 print(f"{nome2}: R${valor}")
@@ -324,8 +398,7 @@ def coletar_investimentos(historico_atual: dict) -> dict:
             nome3 = "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia"
             try:
                 frame = obter_frame(page, URL_CUPONS)
-                selecionar_intervalo(frame, inicio, ontem)
-                selecionar_subsidio_unico(frame, "Franqueadora e Franquia")
+                selecionar_intervalo(frame, inicio, ontem, subsidio="Franqueadora e Franquia")
                 valor_total = ler_desconto_total(frame)
                 valor = round(valor_total / 2, 2)
                 componentes.append({
