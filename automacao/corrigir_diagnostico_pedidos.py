@@ -26,7 +26,7 @@ SCRAPE_PEDIDOS_PATH = REPO_ROOT / "automacao" / "scrape_pedidos.py"
 WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "atualizar-painel.yml"
 
 TRECHO_PY_ANTIGO = '''        except PlaywrightTimeoutError as e:
-            print(f"::error::Timeout esperando elemento - provavelmente um seletor mudou: {e}")
+            print(f"::error::Timeout esperando elemento — provavelmente um seletor mudou: {e}")
             page.screenshot(path="erro_debug.png")
             sys.exit(1)
         except RuntimeError as e:
@@ -35,7 +35,7 @@ TRECHO_PY_ANTIGO = '''        except PlaywrightTimeoutError as e:
             sys.exit(1)'''
 
 TRECHO_PY_NOVO = '''        except PlaywrightTimeoutError as e:
-            print(f"::error::Timeout esperando elemento - provavelmente um seletor mudou: {e}")
+            print(f"::error::Timeout esperando elemento — provavelmente um seletor mudou: {e}")
             page.screenshot(path="erro_debug.png")
             try:
                 Path("erro_debug.html").write_text(page.content(), encoding="utf-8")
@@ -57,7 +57,7 @@ TRECHO_YML_ANTIGO = '''      - name: Coletar pedidos e atualizar arquivos
           PAINEL_SENHA: ${{ secrets.PAINEL_SENHA }}
         run: python automacao/scrape_pedidos.py
 
-      - name: Preparar pasta de publicacao'''
+      - name: Preparar pasta de publicação'''
 
 TRECHO_YML_NOVO = '''      - name: Coletar pedidos e atualizar arquivos
         env:
@@ -78,7 +78,7 @@ TRECHO_YML_NOVO = '''      - name: Coletar pedidos e atualizar arquivos
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Preparar pasta de publicacao'''
+      - name: Preparar pasta de publicação'''
 
 
 def main():
