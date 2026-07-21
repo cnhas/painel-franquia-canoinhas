@@ -283,21 +283,28 @@ def ler_maior_entrega_promocional_franquia(frame) -> float:
     zerada em todas as coletas manuais feitas até 21/07/2026).
 
     BUG REAL encontrado na 1ª rodada de teste (21/07/2026): timeout de 45s
-    tentando achar o texto exato do cabeçalho. Duas causas prováveis: (a) o
-    texto visual pode ser renderizado com capitalização diferente da do DOM
-    (CSS text-transform); (b) a coluna só fica visível rolando a tabela pra
-    direita. Corrigido: busca case-insensitive via regex, tenta rolar a
-    tabela pra direita antes de procurar, e despeja o texto do body como
-    diagnóstico se mesmo assim não achar."""
+    tentando achar o texto exato do cabeçalho ("entrega promocional -
+    subsídio franquia" — nota: o texto real no DOM usa acento em "subsídio",
+    diferente do que a 1ª versão assumia). 2ª rodada de teste: corrigido o
+    acento, mas ainda deu timeout - a coluna só fica visível rolando a
+    tabela bem pra direita, e uma tentativa de rolar via JS escolhendo "o
+    primeiro elemento com scroll horizontal" pegou o elemento errado (não é
+    a tabela). Corrigido: simula uma rolagem de mouse de verdade (wheel
+    horizontal) sobre a área da tabela - mesmo tipo de gesto que funcionou
+    manualmente ao arrastar a barra de rolagem durante a exploração via
+    navegador - repetida algumas vezes, com diagnóstico se mesmo assim não
+    achar."""
     padrao_cabecalho = re.compile(r"entrega\s+promocional\s*-\s*subs[ií]dio\s+franquia", re.I)
 
     try:
-        frame.locator("body").evaluate(
-            "() => { const el = Array.from(document.querySelectorAll('*'))"
-            ".find(e => e.scrollWidth > e.clientWidth && e.children.length > 0);"
-            " if (el) el.scrollLeft = el.scrollWidth; }"
-        )
-        _esperar(frame, 800)
+        pagina = frame.locator("body").page
+        tabela = frame.locator("body")
+        box = tabela.bounding_box()
+        if box:
+            pagina.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        for _ in range(6):
+            pagina.mouse.wheel(2500, 0)
+            _esperar(frame, 400)
     except Exception as e:
         print(f"[debug ler_maior_entrega_promocional_franquia] não consegui rolar a tabela: {e}")
 
