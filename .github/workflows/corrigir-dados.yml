@@ -10,6 +10,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  workflows: write
 
 concurrency:
   group: "pages-deploy"
