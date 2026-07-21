@@ -217,7 +217,13 @@
     "pendencias": [
       "Ranking de lojas por GMV/pedidos vem da aba 'Geral' do Data Much, que é parcial frente ao Painel (validado: soma de pedidos dessa aba ≈ 85 vs. 202 reais no Painel)",
       "Lojas cadastradas por campanha ainda não localizado no Data Much — precisa perguntar ao suporte Delivery Much"
-    ]
+    ],
+    "comparativo_mes_anterior": {
+      "dia_mes_anterior": "2026-06-15",
+      "gmv_mes_anterior": 7985.49,
+      "meta_mes_anterior": 10828,
+      "variacao_pct": 52.19
+    }
   },
   {
     "data": "2026-07-16",
@@ -989,22 +995,38 @@
   }
 ],
   "investimentos": {
-    "periodo": "01/07/2026 a 16/07/2026",
-    "atualizado_em": "2026-07-17",
-    "verificacao_dados_recentes": "Checado em 17/07/2026: Data Much ainda não fechou o dia 16/07 (GMV do dia continua parcial, R$ 239,20) e os relatórios de Cupom/Ofertas não mudaram desde a última coleta. Assim que houver um dia novo completo, entra automaticamente na próxima atualização.",
-    "componentes": [
-      {"nome": "Ofertas De/Por — subsídio franquia", "valor": 1258.89, "obs": "Mês completo (01–31/07); Data Much só tem pedidos até ~16/07"},
-      {"nome": "Cupom — subsídio franquia (direto)", "valor": 286.94, "obs": "01–16/07 · filtro Subsídio = Franquia"},
-      {"nome": "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia", "valor": 730.37, "obs": "50% de R$ 1.460,74 · 01–16/07"},
-      {"nome": "Entrega promocional — subsídio franquia", "valor": 0.00, "obs": "Mês completo · inclui variante 'com pedido mínimo' (ambas zeradas)"}
-    ],
-    "total_confirmado": 2276.20,
-    "pendencias": [
-      "Confirmado com você: não existe subsídio separado de 'entrega grátis' — só entrega promocional entra na conta (removido da fórmula).",
-      "Por loja: só 'entrega promocional' está detalhada por loja até agora (R$0,00 em todas este mês). De/Por e Cupom aparecem só no total do mês — dá pra detalhar por loja numa próxima atualização.",
-      "Por campanha: ainda não localizei uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
-    ]
-  },
+  "periodo": "01/07/2026 a 16/07/2026",
+  "atualizado_em": "2026-07-17",
+  "verificacao_dados_recentes": "ATENCAO (nota adicionada em 21/07/2026): os componentes de Cupom (subsidio franquia direto e 50% do compartilhado) cobrem SO ATE 16/07 - nao foram recoletados desde entao. Os componentes de Ofertas De/Por e Entrega promocional usam filtro 'mes completo', entao tenderiam a refletir dias novos automaticamente, mas o valor aqui ainda e o congelado de 17/07/2026 - precisa de uma nova coleta pra confirmar se mudou. Resumindo: os numeros desta secao NAO estao confirmados como atualizados ate hoje - tratar como referencia de meados de julho (01-16), nao como total do mes inteiro.",
+  "componentes": [
+    {
+      "nome": "Ofertas De/Por — subsídio franquia",
+      "valor": 1258.89,
+      "obs": "Mês completo (01–31/07); Data Much só tem pedidos até ~16/07"
+    },
+    {
+      "nome": "Cupom — subsídio franquia (direto)",
+      "valor": 286.94,
+      "obs": "01–16/07 · filtro Subsídio = Franquia"
+    },
+    {
+      "nome": "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia",
+      "valor": 730.37,
+      "obs": "50% de R$ 1.460,74 · 01–16/07"
+    },
+    {
+      "nome": "Entrega promocional — subsídio franquia",
+      "valor": 0.0,
+      "obs": "Mês completo · inclui variante 'com pedido mínimo' (ambas zeradas)"
+    }
+  ],
+  "total_confirmado": 2276.2,
+  "pendencias": [
+    "Confirmado com você: não existe subsídio separado de 'entrega grátis' — só entrega promocional entra na conta (removido da fórmula).",
+    "Por loja: só 'entrega promocional' está detalhada por loja até agora (R$0,00 em todas este mês). De/Por e Cupom aparecem só no total do mês — dá pra detalhar por loja numa próxima atualização.",
+    "Por campanha: ainda não localizei uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
+  ]
+},
   "ultima_verificacao_dados": "17/07/2026",
   "data_much_status": {
   "dashboard_url": "https://datamuch.deliverymuch.com.br/app/report/208",
