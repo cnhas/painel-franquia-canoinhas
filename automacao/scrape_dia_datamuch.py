@@ -78,6 +78,7 @@ import re
 import sys
 import time
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError, Frame
@@ -86,6 +87,7 @@ DATAMUCH_URL_LOGIN = "https://datamuch.deliverymuch.com.br/login"
 URL_LOJAS = "https://datamuch.deliverymuch.com.br/app/report/488"
 URL_CUPONS = "https://datamuch.deliverymuch.com.br/app/report/216"
 URL_OFERTAS = "https://datamuch.deliverymuch.com.br/app/report/434"
+URL_OPERACAO = "https://datamuch.deliverymuch.com.br/app/report/208"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 INDEX_HTML_PATH = REPO_ROOT / "index.html"
@@ -231,6 +233,72 @@ def selecionar_dia_unico(frame, dia: date):
         except Exception:
             pass
     _esperar(frame, 1500)
+
+
+def selecionar_dia_unico_sem_filtro(frame, dia: date):
+    """Igual a selecionar_dia_unico(), mas pro report/208 (Acompanhamento de
+    Operacao) - la os campos de Data ja ficam visiveis direto na tela, nao
+    escondidos atras de um icone de funil, entao pula abrir_painel_filtro().
+    Confirmado manualmente (sessao de 21/07/2026, via cliques no navegador)
+    que preencher os dois campos com o MESMO dia isola o GMV/Meta de UM dia
+    so nos cards do topo."""
+    data_str = dia.strftime("%d/%m/%Y")
+    campo_inicio = frame.get_by_label(re.compile("Data de in[íi]cio", re.I)).first
+    campo_fim = frame.get_by_label(re.compile(r"Data de t[ée]rmino", re.I)).first
+    campo_inicio.fill(data_str)
+    campo_inicio.press("Tab")
+    _esperar(frame, 500)
+    _fechar_overlay_calendario(frame)
+    _esperar(frame, 500)
+    campo_fim.fill(data_str)
+    campo_fim.press("Tab")
+    _esperar(frame, 500)
+    _fechar_overlay_calendario(frame)
+    _esperar(frame, 2000)
+
+
+def ler_gmv_meta_dia_unico(frame) -> tuple:
+    """Le os cards GMV (Realizado) e Meta do report/208 ja filtrado pra um
+    unico dia. Retorna (gmv, meta). Regex desenhada a partir de observacao
+    visual real (screenshots), no mesmo espirito das outras ler_cards_*."""
+    corpo = frame.locator("body")
+    limite = time.monotonic() + NAV_TIMEOUT_MS / 1000
+    while True:
+        texto = corpo.inner_text()
+        m_gmv = re.search(r"\bGMV\b\s*\n?\s*R\$\s?([\d.,]+)\s*\n?\s*Realizado", texto)
+        m_meta = re.search(r"\bMeta\b\s*\n?\s*R\$\s?([\d.,]+)\s*\n?\s*Meta\b", texto)
+        if m_gmv and m_meta:
+            return round(parse_valor_brl(m_gmv.group(1)), 2), round(parse_valor_brl(m_meta.group(1)), 2)
+        if time.monotonic() >= limite:
+            raise RuntimeError(f"Nao achei os cards GMV/Meta do report/208. Texto: {texto[:1500]!r}")
+        _esperar(frame, 500)
+
+
+def coletar_comparativo_mes_anterior(page, dia: date) -> dict:
+    """Pra um dia X, coleta GMV/Meta do proprio dia X e do mesmo dia no mes
+    anterior via report/208 (Acompanhamento de Operacao), e retorna o bloco
+    comparativo_mes_anterior pronto pra gravar em dias[]."""
+    primeiro_dia_mes_atual = dia.replace(day=1)
+    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+    dia_no_mes_anterior = min(dia.day, ultimo_dia_mes_anterior.day)
+    data_mes_anterior = ultimo_dia_mes_anterior.replace(day=dia_no_mes_anterior)
+
+    frame_operacao = obter_frame(page, URL_OPERACAO)
+    selecionar_dia_unico_sem_filtro(frame_operacao, data_mes_anterior)
+    gmv_mes_anterior, meta_mes_anterior = ler_gmv_meta_dia_unico(frame_operacao)
+
+    frame_operacao2 = obter_frame(page, URL_OPERACAO)
+    selecionar_dia_unico_sem_filtro(frame_operacao2, dia)
+    gmv_dia, _meta_dia = ler_gmv_meta_dia_unico(frame_operacao2)
+
+    variacao_pct = round((gmv_dia / gmv_mes_anterior - 1) * 100, 2) if gmv_mes_anterior else None
+
+    return {
+        "dia_mes_anterior": data_mes_anterior.strftime("%Y-%m-%d"),
+        "gmv_mes_anterior": gmv_mes_anterior,
+        "meta_mes_anterior": meta_mes_anterior,
+        "variacao_pct": variacao_pct,
+    }
 
 
 def ler_cards_ofertas(frame) -> dict:
@@ -514,17 +582,33 @@ def coletar_dia(page, dia: date) -> dict:
     dados_ofertas = ler_cards_ofertas(frame_ofertas)
     print(f"Ofertas De/Por: {dados_ofertas['itens_vendidos']} itens.")
 
-    return {
+    pendencias = [
+        "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos "
+        "nesta atualização automática — só os dados do Data Much.",
+    ]
+
+    comparativo_mes_anterior = None
+    try:
+        comparativo_mes_anterior = coletar_comparativo_mes_anterior(page, dia)
+        print(f"Comparativo mês anterior: {comparativo_mes_anterior}")
+    except Exception as e:
+        print(f"::warning::Não consegui coletar comparativo_mes_anterior para {dia}: {e}")
+        pendencias.append(
+            "Comparativo com o mesmo dia do mês anterior não pôde ser coletado automaticamente "
+            "nesta rodada (ver log de warning) — fica pendente pra próxima."
+        )
+
+    resultado = {
         "data": dia.strftime("%Y-%m-%d"),
         **dados_cupons_para_dia(dados_cupons),
         "ofertas_de_por": dados_ofertas,
         "top_lojas_gmv": top_gmv,
         "top_lojas_pedidos": top_pedidos,
-        "pendencias": [
-            "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos "
-            "nesta atualização automática — só os dados do Data Much.",
-        ],
+        "pendencias": pendencias,
     }
+    if comparativo_mes_anterior is not None:
+        resultado["comparativo_mes_anterior"] = comparativo_mes_anterior
+    return resultado
 
 
 def dados_cupons_para_dia(dados_cupons: dict) -> dict:
@@ -650,8 +734,12 @@ def _diagnosticar_erro(page, contexto: str):
 def main():
     dias_alvo_str = os.environ.get("DIAS_ALVO", "")
     if not dias_alvo_str:
-        print("::error::Defina a variável de ambiente DIAS_ALVO (ex: 2026-07-16,2026-07-17)")
-        sys.exit(1)
+        # Rodando via agendamento (schedule), sem input manual: usa "ontem"
+        # no fuso de Canoinhas/Três Barras, que costuma ser o último dia já
+        # fechado no Data Much.
+        ontem = (datetime.now(ZoneInfo("America/Sao_Paulo")) - timedelta(days=1)).date()
+        dias_alvo_str = ontem.strftime("%Y-%m-%d")
+        print(f"DIAS_ALVO não veio definido (provável run agendado) — usando ontem: {dias_alvo_str}")
     dias_alvo = [
         datetime.strptime(d.strip(), "%Y-%m-%d").date()
         for d in dias_alvo_str.split(",") if d.strip()
