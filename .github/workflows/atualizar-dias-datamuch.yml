@@ -20,6 +20,10 @@ concurrency:
   cancel-in-progress: false
 
 on:
+  schedule:
+      # Roda 1x/dia, depois que a atualização normal do Data Much (que roda em loop
+          # até ~15h BRT) já teve chance de confirmar o dia fechado - 16h BRT = 19h UTC.
+              - cron: '0 19 * * *'
   workflow_dispatch:
     inputs:
       dias:
