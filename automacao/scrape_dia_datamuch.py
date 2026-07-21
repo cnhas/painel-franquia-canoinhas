@@ -275,9 +275,19 @@ def ler_gmv_meta_dia_unico(frame) -> tuple:
 
 
 def coletar_comparativo_mes_anterior(page, dia: date) -> dict:
-    """Pra um dia X, coleta GMV/Meta do proprio dia X e do mesmo dia no mes
-    anterior via report/208 (Acompanhamento de Operacao), e retorna o bloco
-    comparativo_mes_anterior pronto pra gravar em dias[]."""
+    """Pra um dia X, coleta GMV/Meta do MESMO DIA no mes anterior via
+    report/208 (Acompanhamento de Operacao). NAO re-coleta o GMV do proprio
+    dia X aqui - o valor "oficial" de gmv_dia vem de outra fonte
+    (gmv_diario_mes, a mesma usada no resto do painel) e e' aplicado depois,
+    em main(), pra garantir que a % de variacao sempre bate com o "GMV hoje"
+    mostrado no resto do painel.
+
+    BUG REAL encontrado em 21/07/2026: a versao anterior desta funcao tambem
+    relia o GMV de "hoje" direto do report/208 pra calcular a variacao_pct
+    aqui mesmo - mas esse valor pode diferir um pouco do gmv_dia oficial
+    (dia 19/07: -25.4% usando o GMV relido do report/208, contra -25.11%
+    usando o gmv_dia oficial de R$18.339,61 - a diferenca veio do Power BI
+    ter atualizado os dados "mes atual" entre a 1a coleta do dia e agora)."""
     primeiro_dia_mes_atual = dia.replace(day=1)
     ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
     dia_no_mes_anterior = min(dia.day, ultimo_dia_mes_anterior.day)
@@ -287,17 +297,10 @@ def coletar_comparativo_mes_anterior(page, dia: date) -> dict:
     selecionar_dia_unico_sem_filtro(frame_operacao, data_mes_anterior)
     gmv_mes_anterior, meta_mes_anterior = ler_gmv_meta_dia_unico(frame_operacao)
 
-    frame_operacao2 = obter_frame(page, URL_OPERACAO)
-    selecionar_dia_unico_sem_filtro(frame_operacao2, dia)
-    gmv_dia, _meta_dia = ler_gmv_meta_dia_unico(frame_operacao2)
-
-    variacao_pct = round((gmv_dia / gmv_mes_anterior - 1) * 100, 2) if gmv_mes_anterior else None
-
     return {
         "dia_mes_anterior": data_mes_anterior.strftime("%Y-%m-%d"),
         "gmv_mes_anterior": gmv_mes_anterior,
         "meta_mes_anterior": meta_mes_anterior,
-        "variacao_pct": variacao_pct,
     }
 
 
@@ -764,6 +767,26 @@ def main():
                     if gmv is not None:
                         novo_dia["gmv_dia"] = gmv
                         novo_dia["meta_dia"] = meta
+                    # Fecha o calculo de variacao_pct do comparativo_mes_anterior
+                    # usando o gmv_dia OFICIAL (mesma fonte do resto do painel) -
+                    # nunca um valor relido do report/208 - pra nunca mostrar uma
+                    # % que nao bate com o "GMV hoje" exibido em outro lugar do
+                    # painel (bug real corrigido em 21/07/2026).
+                    comp = novo_dia.get("comparativo_mes_anterior")
+                    if comp is not None:
+                        gmv_mes_ant = comp.get("gmv_mes_anterior")
+                        if gmv is not None and gmv_mes_ant:
+                            comp["variacao_pct"] = round((gmv / gmv_mes_ant - 1) * 100, 2)
+                        else:
+                            # Sem gmv_dia oficial ainda - descarta o comparativo
+                            # nesta rodada em vez de gravar uma % que pode estar
+                            # errada.
+                            del novo_dia["comparativo_mes_anterior"]
+                            novo_dia.setdefault("pendencias", []).append(
+                                "Comparativo com o mesmo dia do mês anterior coletado, mas o "
+                                "GMV oficial de hoje ainda não estava disponível pra calcular a "
+                                "variação % com segurança — fica pendente pra próxima rodada."
+                            )
                     dias_atual = upsert_dia(dias_atual, novo_dia)
                     algum_sucesso = True
                 except (PlaywrightTimeoutError, RuntimeError) as e:
