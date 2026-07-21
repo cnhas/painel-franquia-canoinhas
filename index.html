@@ -1275,14 +1275,14 @@ const dataStore = {
   }
 ],
   "investimentos": {
-  "periodo": "01/07/2026 a 16/07/2026",
-  "atualizado_em": "2026-07-17",
-  "verificacao_dados_recentes": "ATENCAO (nota adicionada em 21/07/2026): os componentes de Cupom (subsidio franquia direto e 50% do compartilhado) cobrem SO ATE 16/07 - nao foram recoletados desde entao. Os componentes de Ofertas De/Por e Entrega promocional usam filtro 'mes completo', entao tenderiam a refletir dias novos automaticamente, mas o valor aqui ainda e o congelado de 17/07/2026 - precisa de uma nova coleta pra confirmar se mudou. Resumindo: os numeros desta secao NAO estao confirmados como atualizados ate hoje - tratar como referencia de meados de julho (01-16), nao como total do mes inteiro.",
+  "periodo": "01/07/2026 a 20/07/2026",
+  "atualizado_em": "2026-07-21",
+  "verificacao_dados_recentes": "Atualizado automaticamente em 21/07/2026 13:01 pela rotina diária. Cobre 01/07/2026 a 20/07/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
   "componentes": [
     {
       "nome": "Ofertas De/Por — subsídio franquia",
-      "valor": 1258.89,
-      "obs": "Mês completo (01–31/07); Data Much só tem pedidos até ~16/07"
+      "valor": 1735.0,
+      "obs": "Mês corrente (01/07/2026 a 20/07/2026)"
     },
     {
       "nome": "Cupom — subsídio franquia (direto)",
@@ -1300,11 +1300,13 @@ const dataStore = {
       "obs": "Mês completo · inclui variante 'com pedido mínimo' (ambas zeradas)"
     }
   ],
-  "total_confirmado": 2276.2,
+  "total_confirmado": 2752.31,
   "pendencias": [
-    "Confirmado com você: não existe subsídio separado de 'entrega grátis' — só entrega promocional entra na conta (removido da fórmula).",
-    "Por loja: só 'entrega promocional' está detalhada por loja até agora (R$0,00 em todas este mês). De/Por e Cupom aparecem só no total do mês — dá pra detalhar por loja numa próxima atualização.",
-    "Por campanha: ainda não localizei uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
+    "\"Cupom — subsídio franquia (direto)\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 286.94), pode estar desatualizado.",
+    "\"Cupom — 50% do subsídio compartilhado Franqueadora + Franquia\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 730.37), pode estar desatualizado.",
+    "\"Entrega promocional — subsídio franquia\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 0.0), pode estar desatualizado.",
+    "Por loja: só 'entrega promocional' está detalhada por loja até agora — De/Por e Cupom aparecem só no total do período.",
+    "Por campanha: ainda não há uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
   ]
 }
 };
