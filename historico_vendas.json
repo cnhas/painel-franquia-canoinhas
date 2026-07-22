@@ -1212,6 +1212,194 @@
     },
     "gmv_dia": 8963.04,
     "meta_dia": 15633
+  },
+  {
+    "data": "2026-07-21",
+    "pedidos_cupom": 42,
+    "gmv_cupom": 2725.9,
+    "desconto_total": 305.2,
+    "ticket_medio_cupom": 64.9,
+    "gmv_por_cupom": 8.93,
+    "lojas_unicas_cupom": 32,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 37
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 24
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 21
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 22
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 24
+      },
+      {
+        "categoria": "Semana do Cliente",
+        "qtd": 18
+      },
+      {
+        "categoria": "Combão com Desconto",
+        "qtd": 19
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 17
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "BIONDI",
+        "pedidos": 1
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 4
+      },
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 32
+      },
+      {
+        "codigo": "PRIMEIROPEDIDO",
+        "pedidos": 3
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 62,
+      "subsidio_dm": 35.0,
+      "subsidio_franquia": 201.39,
+      "subsidio_loja": 420.81,
+      "gmv_produtos": 1940.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 68.52,
+        "pedidos": 1
+      },
+      {
+        "nome": "Conveniência Corujão",
+        "gmv": 30.0,
+        "pedidos": 1
+      },
+      {
+        "nome": "Bavaria Lanches,a",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Salapot Food",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "King's Pizza",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Chef Burguer Grill",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Cantinho do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Laudecir Maciel Carnes",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Fast Food Rotatória Costela Burguer",
+        "gmv": 0.0,
+        "pedidos": 0
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 68.52,
+        "pedidos": 1
+      },
+      {
+        "nome": "Conveniência Corujão",
+        "gmv": 30.0,
+        "pedidos": 1
+      },
+      {
+        "nome": "Bavaria Lanches,a",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Salapot Food",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "King's Pizza",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Chef Burguer Grill",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Cantinho do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Laudecir Maciel Carnes",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Fast Food Rotatória Costela Burguer",
+        "gmv": 0.0,
+        "pedidos": 0
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much."
+    ],
+    "comparativo_mes_anterior": {
+      "dia_mes_anterior": "2026-06-21",
+      "gmv_mes_anterior": 17858.23,
+      "meta_mes_anterior": 20417.0,
+      "variacao_pct": -44.34
+    },
+    "gmv_dia": 9939.12,
+    "meta_dia": 15633
   }
 ],
   "investimentos": {
