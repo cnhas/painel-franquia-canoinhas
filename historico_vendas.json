@@ -1445,12 +1445,12 @@
 },
   "pedidos_ao_vivo_hoje": {
     "data": "2026-07-23",
-    "checado_em": "13:10",
+    "checado_em": "14:05",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 57,
+    "pedidos_totais": 62,
     "cancelados": 1,
-    "pct_cancelados": 1.8,
-    "gmv_total": 2351.36,
-    "gmv_valido": 2291.22
+    "pct_cancelados": 1.6,
+    "gmv_total": 2535.27,
+    "gmv_valido": 2475.13
   }
 }
