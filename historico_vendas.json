@@ -1445,7 +1445,7 @@
 },
   "pedidos_ao_vivo_hoje": {
     "data": "2026-07-23",
-    "checado_em": "07:05",
+    "checado_em": "07:54",
     "fonte": "Painel > Histórico, filtro Hoje",
     "pedidos_totais": 3,
     "cancelados": 0,
