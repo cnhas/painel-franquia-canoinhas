@@ -1592,6 +1592,194 @@
     },
     "gmv_dia": 12616.61,
     "meta_dia": 15633
+  },
+  {
+    "data": "2026-07-23",
+    "pedidos_cupom": 59,
+    "gmv_cupom": 4265.1,
+    "desconto_total": 362.7,
+    "ticket_medio_cupom": 72.29,
+    "gmv_por_cupom": 11.76,
+    "lojas_unicas_cupom": 32,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 54
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 34
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 20
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 21
+      },
+      {
+        "categoria": "Promo Turbinada",
+        "qtd": 27
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 30
+      },
+      {
+        "categoria": "Semana do Cliente",
+        "qtd": 23
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 21
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "ADEGA",
+        "pedidos": 1
+      },
+      {
+        "codigo": "BAVARIA",
+        "pedidos": 3
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 1
+      },
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 52
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 112,
+      "subsidio_dm": 38.0,
+      "subsidio_franquia": 297.35,
+      "subsidio_loja": 1032.0,
+      "gmv_produtos": 3174.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Bavaria Lanches,a",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Cantinho do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Laudecir Maciel Carnes",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Fast Food Rotatória Costela Burguer",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Trailer Alto do Mussi",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Point do Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Avenida Café e Chopp",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "La Casa de Açaí",
+        "gmv": 0.0,
+        "pedidos": 0
+      },
+      {
+        "nome": "Top Açaí Gourmet",
+        "gmv": 0.0,
+        "pedidos": 0
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 0.0,
+        "pedidos": 15
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 423.34,
+        "pedidos": 13
+      },
+      {
+        "nome": "Top'z Burger",
+        "gmv": 827.64,
+        "pedidos": 12
+      },
+      {
+        "nome": "Comida Caseira",
+        "gmv": 311.0,
+        "pedidos": 8
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 593.21,
+        "pedidos": 7
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 511.46,
+        "pedidos": 7
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 457.29,
+        "pedidos": 7
+      },
+      {
+        "nome": "Salapot Food",
+        "gmv": 252.9,
+        "pedidos": 6
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 424.2,
+        "pedidos": 6
+      },
+      {
+        "nome": "Chef Express",
+        "gmv": 582.0,
+        "pedidos": 6
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much."
+    ],
+    "comparativo_mes_anterior": {
+      "dia_mes_anterior": "2026-06-23",
+      "gmv_mes_anterior": 9879.5,
+      "meta_mes_anterior": 11582.0,
+      "variacao_pct": 25.3
+    },
+    "gmv_dia": 12379.09,
+    "meta_dia": 15633
   }
 ],
   "investimentos": {
