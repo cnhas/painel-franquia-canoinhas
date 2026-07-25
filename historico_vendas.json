@@ -1983,24 +1983,24 @@
   }
 ],
   "investimentos": {
-  "periodo": "01/07/2026 a 23/07/2026",
-  "atualizado_em": "2026-07-24",
-  "verificacao_dados_recentes": "Atualizado automaticamente em 24/07/2026 19:45 pela rotina diária. Cobre 01/07/2026 a 23/07/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
+  "periodo": "01/07/2026 a 24/07/2026",
+  "atualizado_em": "2026-07-25",
+  "verificacao_dados_recentes": "Atualizado automaticamente em 25/07/2026 19:36 pela rotina diária. Cobre 01/07/2026 a 24/07/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
   "componentes": [
     {
       "nome": "Ofertas De/Por — subsídio franquia",
-      "valor": 2631.0,
-      "obs": "Mês corrente (01/07/2026 a 23/07/2026)"
+      "valor": 2983.0,
+      "obs": "Mês corrente (01/07/2026 a 24/07/2026)"
     },
     {
       "nome": "Cupom — subsídio franquia (direto)",
-      "valor": 431.34,
-      "obs": "01/07/2026 a 23/07/2026 · filtro Subsídio = Franquia"
+      "valor": 461.34,
+      "obs": "01/07/2026 a 24/07/2026 · filtro Subsídio = Franquia"
     },
     {
       "nome": "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia",
-      "valor": 1026.63,
-      "obs": "50% de R$ 2053.27 · 01/07/2026 a 23/07/2026"
+      "valor": 1049.47,
+      "obs": "50% de R$ 2098.95 · 01/07/2026 a 24/07/2026"
     },
     {
       "nome": "Entrega promocional — subsídio franquia",
@@ -2008,7 +2008,7 @@
       "obs": "Revertido em 21/07/2026: um valor de R$92,80 tinha sido gravado por engano (era o maior valor de 1 loja só, não a soma de todas as lojas). Até a automação somar a coluna inteira, fica em 0,00 com pendência explícita — NÃO necessariamente o valor real (pode ser > 0)."
     }
   ],
-  "total_confirmado": 4088.97,
+  "total_confirmado": 4493.81,
   "pendencias": [
     "\"Entrega promocional — subsídio franquia\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 0.0), pode estar desatualizado.",
     "Por loja: só 'entrega promocional' está detalhada por loja até agora — De/Por e Cupom aparecem só no total do período.",
