@@ -2024,13 +2024,13 @@
   "verificado_ok_data": "2026-07-25"
 },
   "pedidos_ao_vivo_hoje": {
-    "data": "2026-07-25",
-    "checado_em": "20:48",
+    "data": "2026-07-26",
+    "checado_em": "04:15",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 216,
-    "cancelados": 7,
-    "pct_cancelados": 3.2,
-    "gmv_total": 8485.27,
-    "gmv_valido": 7979.72
+    "pedidos_totais": 9,
+    "cancelados": 1,
+    "pct_cancelados": 11.1,
+    "gmv_total": 539.62,
+    "gmv_valido": 502.8
   }
 }
