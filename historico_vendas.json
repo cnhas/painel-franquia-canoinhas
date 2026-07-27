@@ -2172,6 +2172,206 @@
     },
     "gmv_dia": 18717.05,
     "meta_dia": 15633
+  },
+  {
+    "data": "2026-07-26",
+    "pedidos_cupom": 80,
+    "gmv_cupom": 6049.75,
+    "desconto_total": 607.38,
+    "ticket_medio_cupom": 75.62,
+    "gmv_por_cupom": 9.96,
+    "lojas_unicas_cupom": 31,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 64
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 63
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 37
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 39
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 38
+      },
+      {
+        "categoria": "Semana do Cliente",
+        "qtd": 37
+      },
+      {
+        "categoria": "Tudo por 14",
+        "qtd": 32
+      },
+      {
+        "categoria": "Lanches",
+        "qtd": 29
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 1
+      },
+      {
+        "codigo": "10PILA",
+        "pedidos": 17
+      },
+      {
+        "codigo": "20PILA",
+        "pedidos": 2
+      },
+      {
+        "codigo": "BAVARIA",
+        "pedidos": 1
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 44
+      },
+      {
+        "codigo": "PRIMEIROPEDIDO",
+        "pedidos": 1
+      },
+      {
+        "codigo": "RANGO",
+        "pedidos": 12
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 125,
+      "subsidio_dm": 17.0,
+      "subsidio_franquia": 308.4,
+      "subsidio_loja": 1098.0,
+      "gmv_produtos": 3752.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 1076.79,
+        "pedidos": 15
+      },
+      {
+        "nome": "Garajão do Dog - Centro",
+        "gmv": 986.83,
+        "pedidos": 12
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 889.0,
+        "pedidos": 9
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 852.07,
+        "pedidos": 12
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 765.03,
+        "pedidos": 11
+      },
+      {
+        "nome": "Dom Gabriel Pizza Delivery Canoinhas",
+        "gmv": 752.39,
+        "pedidos": 8
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 745.09,
+        "pedidos": 7
+      },
+      {
+        "nome": "Machado Burguer's",
+        "gmv": 651.54,
+        "pedidos": 8
+      },
+      {
+        "nome": "PIZZA EXPRESS",
+        "gmv": 560.0,
+        "pedidos": 8
+      },
+      {
+        "nome": "Garden Hamburgueria e Bistro",
+        "gmv": 504.84,
+        "pedidos": 6
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 1076.79,
+        "pedidos": 15
+      },
+      {
+        "nome": "Bavaria Lanches",
+        "gmv": 0.0,
+        "pedidos": 13
+      },
+      {
+        "nome": "Garajão do Dog - Centro",
+        "gmv": 986.83,
+        "pedidos": 12
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 852.07,
+        "pedidos": 12
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 765.03,
+        "pedidos": 11
+      },
+      {
+        "nome": "Top Gelado Delivery - Açaí e Lanches",
+        "gmv": 437.84,
+        "pedidos": 10
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 889.0,
+        "pedidos": 9
+      },
+      {
+        "nome": "Brayan Delivery",
+        "gmv": 467.8,
+        "pedidos": 9
+      },
+      {
+        "nome": "Machado Burguer's",
+        "gmv": 651.54,
+        "pedidos": 8
+      },
+      {
+        "nome": "Dom Gabriel Pizza Delivery Canoinhas",
+        "gmv": 752.39,
+        "pedidos": 8
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much."
+    ],
+    "comparativo_mes_anterior": {
+      "dia_mes_anterior": "2026-06-26",
+      "gmv_mes_anterior": 17262.34,
+      "meta_mes_anterior": 21466.0,
+      "variacao_pct": -1.28
+    },
+    "gmv_dia": 17040.66,
+    "meta_dia": 15633
   }
 ],
   "investimentos": {
