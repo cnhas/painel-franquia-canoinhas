@@ -2808,13 +2808,13 @@
   "verificado_ok_data": "2026-07-29"
 },
   "pedidos_ao_vivo_hoje": {
-    "data": "2026-07-29",
-    "checado_em": "21:14",
+    "data": "2026-07-30",
+    "checado_em": "06:45",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 0,
+    "pedidos_totais": 5,
     "cancelados": 0,
     "pct_cancelados": 0.0,
-    "gmv_total": 0,
-    "gmv_valido": 0
+    "gmv_total": 408.61,
+    "gmv_valido": 408.61
   }
 }
