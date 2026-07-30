@@ -2809,7 +2809,7 @@
 },
   "pedidos_ao_vivo_hoje": {
     "data": "2026-07-30",
-    "checado_em": "06:45",
+    "checado_em": "07:03",
     "fonte": "Painel > Histórico, filtro Hoje",
     "pedidos_totais": 5,
     "cancelados": 0,
