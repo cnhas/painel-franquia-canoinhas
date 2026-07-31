@@ -2968,6 +2968,210 @@
     },
     "gmv_dia": 12562.46,
     "meta_dia": 15633
+  },
+  {
+    "data": "2026-07-30",
+    "pedidos_cupom": 82,
+    "gmv_cupom": 5197.56,
+    "desconto_total": 500.3,
+    "ticket_medio_cupom": 63.38,
+    "gmv_por_cupom": 10.39,
+    "lojas_unicas_cupom": 51,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 75
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 50
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 41
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 42
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 41
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 32
+      },
+      {
+        "categoria": "Combão com Desconto",
+        "qtd": 35
+      },
+      {
+        "categoria": "Semana do Cliente",
+        "qtd": 31
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "10PILA",
+        "pedidos": 9
+      },
+      {
+        "codigo": "20PILA",
+        "pedidos": 2
+      },
+      {
+        "codigo": "ADEGA",
+        "pedidos": 1
+      },
+      {
+        "codigo": "BIONDI",
+        "pedidos": 1
+      },
+      {
+        "codigo": "BOMAPETITE",
+        "pedidos": 1
+      },
+      {
+        "codigo": "MUCH",
+        "pedidos": 18
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 6
+      },
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 41
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 170,
+      "subsidio_dm": 99.44,
+      "subsidio_franquia": 491.4,
+      "subsidio_loja": 1132.0,
+      "gmv_produtos": 4703.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 1126.68,
+        "pedidos": 24
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 539.51,
+        "pedidos": 8
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 537.24,
+        "pedidos": 15
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 477.0,
+        "pedidos": 5
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 475.74,
+        "pedidos": 7
+      },
+      {
+        "nome": "PIZZA EXPRESS",
+        "gmv": 382.0,
+        "pedidos": 3
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 378.66,
+        "pedidos": 6
+      },
+      {
+        "nome": "Machado Burguer's",
+        "gmv": 343.72,
+        "pedidos": 4
+      },
+      {
+        "nome": "Garden Hamburgueria e Bistro",
+        "gmv": 338.39,
+        "pedidos": 7
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 319.7,
+        "pedidos": 3
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 1126.68,
+        "pedidos": 24
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 537.24,
+        "pedidos": 15
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 539.51,
+        "pedidos": 8
+      },
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 0.0,
+        "pedidos": 8
+      },
+      {
+        "nome": "Garden Hamburgueria e Bistro",
+        "gmv": 338.39,
+        "pedidos": 7
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 475.74,
+        "pedidos": 7
+      },
+      {
+        "nome": "Mais Sabor Café",
+        "gmv": 173.5,
+        "pedidos": 6
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 378.66,
+        "pedidos": 6
+      },
+      {
+        "nome": "Restaurante 10",
+        "gmv": 203.0,
+        "pedidos": 5
+      },
+      {
+        "nome": "Big Dog da Kombi",
+        "gmv": 242.0,
+        "pedidos": 5
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much."
+    ],
+    "comparativo_mes_anterior": {
+      "dia_mes_anterior": "2026-06-30",
+      "gmv_mes_anterior": 10917.7,
+      "meta_mes_anterior": 13697.0,
+      "variacao_pct": 14.51
+    },
+    "gmv_dia": 12501.57,
+    "meta_dia": 15633
   }
 ],
   "investimentos": {
