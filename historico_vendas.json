@@ -3217,12 +3217,12 @@
 },
   "pedidos_ao_vivo_hoje": {
     "data": "2026-08-01",
-    "checado_em": "12:47",
+    "checado_em": "14:37",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 62,
-    "cancelados": 3,
-    "pct_cancelados": 4.8,
-    "gmv_total": 3055.45,
-    "gmv_valido": 2923.91
+    "pedidos_totais": 81,
+    "cancelados": 6,
+    "pct_cancelados": 7.4,
+    "gmv_total": 3941.07,
+    "gmv_valido": 3693.69
   }
 }
