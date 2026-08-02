@@ -3421,12 +3421,12 @@
 },
   "pedidos_ao_vivo_hoje": {
     "data": "2026-08-02",
-    "checado_em": "12:48",
+    "checado_em": "14:43",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 37,
+    "pedidos_totais": 52,
     "cancelados": 4,
-    "pct_cancelados": 10.8,
-    "gmv_total": 2068.08,
-    "gmv_valido": 1868.55
+    "pct_cancelados": 7.7,
+    "gmv_total": 2893.83,
+    "gmv_valido": 2694.3
   }
 }
