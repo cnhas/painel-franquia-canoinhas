@@ -3618,12 +3618,12 @@
 },
   "pedidos_ao_vivo_hoje": {
     "data": "2026-08-02",
-    "checado_em": "17:16",
+    "checado_em": "20:46",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 76,
-    "cancelados": 5,
-    "pct_cancelados": 6.6,
-    "gmv_total": 4340.96,
-    "gmv_valido": 4120.97
+    "pedidos_totais": 229,
+    "cancelados": 3,
+    "pct_cancelados": 1.3,
+    "gmv_total": 6820.15,
+    "gmv_valido": 6609.42
   }
 }
