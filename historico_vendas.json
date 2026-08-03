@@ -3617,13 +3617,13 @@
   "verificado_ok_data": "2026-08-02"
 },
   "pedidos_ao_vivo_hoje": {
-    "data": "2026-08-02",
-    "checado_em": "20:46",
+    "data": "2026-08-03",
+    "checado_em": "05:52",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 229,
-    "cancelados": 3,
-    "pct_cancelados": 1.3,
-    "gmv_total": 6820.15,
-    "gmv_valido": 6609.42
+    "pedidos_totais": 4,
+    "cancelados": 1,
+    "pct_cancelados": 25.0,
+    "gmv_total": 270.72,
+    "gmv_valido": 212.41
   }
 }
