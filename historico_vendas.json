@@ -3807,12 +3807,12 @@
 },
   "pedidos_ao_vivo_hoje": {
     "data": "2026-08-04",
-    "checado_em": "15:14",
+    "checado_em": "17:56",
     "fonte": "Painel > Histórico, filtro Hoje",
-    "pedidos_totais": 47,
+    "pedidos_totais": 65,
     "cancelados": 2,
-    "pct_cancelados": 4.3,
-    "gmv_total": 2067.38,
-    "gmv_valido": 1999.26
+    "pct_cancelados": 3.1,
+    "gmv_total": 3158.1,
+    "gmv_valido": 3089.98
   }
 }
