@@ -3762,6 +3762,195 @@
       "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
       "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
     ]
+  },
+  {
+    "data": "2026-08-03",
+    "pedidos_cupom": 63,
+    "gmv_cupom": 4156.0,
+    "desconto_total": 385.18,
+    "ticket_medio_cupom": 65.97,
+    "gmv_por_cupom": 10.79,
+    "lojas_unicas_cupom": 35,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 57
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 41
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 38
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 45
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 41
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 32
+      },
+      {
+        "categoria": "Semana do Cliente",
+        "qtd": 27
+      },
+      {
+        "categoria": "Combão com Desconto",
+        "qtd": 28
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 3
+      },
+      {
+        "codigo": "BIONDI",
+        "pedidos": 1
+      },
+      {
+        "codigo": "MUCH",
+        "pedidos": 4
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 3
+      },
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 12
+      },
+      {
+        "codigo": "PRIMEIROPEDIDO",
+        "pedidos": 1
+      },
+      {
+        "codigo": "REPITA3VEZES",
+        "pedidos": 39
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 3097,
+      "subsidio_dm": 2537.0,
+      "subsidio_franquia": 6077.0,
+      "subsidio_loja": 31358.0,
+      "gmv_produtos": 102055.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 32949.96,
+        "pedidos": 491
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 22176.25,
+        "pedidos": 299
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 21835.7,
+        "pedidos": 200
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 18122.0,
+        "pedidos": 186
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 15081.43,
+        "pedidos": 178
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 14290.75,
+        "pedidos": 210
+      },
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 13832.7,
+        "pedidos": 179
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 12852.46,
+        "pedidos": 172
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 11716.77,
+        "pedidos": 284
+      },
+      {
+        "nome": "Steak House Petry e Pizzaria",
+        "gmv": 10806.55,
+        "pedidos": 84
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 32949.96,
+        "pedidos": 491
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 22176.25,
+        "pedidos": 299
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 11716.77,
+        "pedidos": 284
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 14290.75,
+        "pedidos": 210
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 21835.7,
+        "pedidos": 200
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 18122.0,
+        "pedidos": 186
+      },
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 13832.7,
+        "pedidos": 179
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 15081.43,
+        "pedidos": 178
+      },
+      {
+        "nome": "Restaurante 10",
+        "gmv": 6340.0,
+        "pedidos": 175
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 12852.46,
+        "pedidos": 172
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
+      "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
+    ]
   }
 ],
   "investimentos": {
