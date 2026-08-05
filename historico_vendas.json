@@ -3951,6 +3951,203 @@
       "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
       "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
     ]
+  },
+  {
+    "data": "2026-08-04",
+    "pedidos_cupom": 58,
+    "gmv_cupom": 3627.48,
+    "desconto_total": 321.32,
+    "ticket_medio_cupom": 62.54,
+    "gmv_por_cupom": 11.29,
+    "lojas_unicas_cupom": 27,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 50
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 46
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 39
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 42
+      },
+      {
+        "categoria": "Semana do Cliente",
+        "qtd": 30
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 29
+      },
+      {
+        "categoria": "Combão com Desconto",
+        "qtd": 32
+      },
+      {
+        "categoria": "Tudo por 14",
+        "qtd": 27
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "MUCH",
+        "pedidos": 7
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 10
+      },
+      {
+        "codigo": "PIX10",
+        "pedidos": 1
+      },
+      {
+        "codigo": "PRIMEIROPEDIDO",
+        "pedidos": 1
+      },
+      {
+        "codigo": "REPITA3VEZES",
+        "pedidos": 29
+      },
+      {
+        "codigo": "TROCAPIX2",
+        "pedidos": 2
+      },
+      {
+        "codigo": "VAINOPIX2",
+        "pedidos": 4
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 3213,
+      "subsidio_dm": 2548.0,
+      "subsidio_franquia": 6193.0,
+      "subsidio_loja": 32741.0,
+      "gmv_produtos": 104517.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 32949.96,
+        "pedidos": 491
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 22176.25,
+        "pedidos": 299
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 21835.7,
+        "pedidos": 200
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 18122.0,
+        "pedidos": 186
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 15081.43,
+        "pedidos": 178
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 14290.75,
+        "pedidos": 210
+      },
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 13832.7,
+        "pedidos": 179
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 12852.46,
+        "pedidos": 172
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 11716.77,
+        "pedidos": 284
+      },
+      {
+        "nome": "Steak House Petry e Pizzaria",
+        "gmv": 10806.55,
+        "pedidos": 84
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 32949.96,
+        "pedidos": 491
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 22176.25,
+        "pedidos": 299
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 11716.77,
+        "pedidos": 284
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 14290.75,
+        "pedidos": 210
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 21835.7,
+        "pedidos": 200
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 18122.0,
+        "pedidos": 186
+      },
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 13832.7,
+        "pedidos": 179
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 15081.43,
+        "pedidos": 178
+      },
+      {
+        "nome": "Restaurante 10",
+        "gmv": 6340.0,
+        "pedidos": 175
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 12852.46,
+        "pedidos": 172
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
+      "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
+    ]
   }
 ],
   "investimentos": {
