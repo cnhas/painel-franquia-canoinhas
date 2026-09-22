@@ -47,7 +47,7 @@ import os
 import re
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
@@ -253,32 +253,45 @@ def coletar_contexto(frame) -> dict:
     }
 
 
-def atualizar_gmv_diario(gmv_diario_atual: list, novo_contexto: dict) -> list:
-    """Calcula o(s) dia(s) novo(s) fechado(s) por diferença: GMV do mês (novo total)
-    menos a soma do que já estava registrado = GMV do(s) dia(s) que faltavam.
-    Meta diária é aproximada (meta do mês / dias no mês) já que o Data Much não expõe
-    a meta exata de cada dia nessa tela — só a meta do mês inteiro."""
+def preencher_dias_faltantes_gmv_diario(page, gmv_diario_atual: list, ultimo_dia_disponivel) -> list:
+    """SUBSTITUI a antiga atualizar_gmv_diario() (baseada em delta entre o total
+    "mês atual" e a soma dos dias já registrados). BUG REAL encontrado em
+    22/09/2026: na virada de mês o total "mês atual" reinicia do zero, mas a
+    soma acumulada dos dias registrados continha meses anteriores inteiros —
+    fazendo o delta ficar permanentemente negativo e travando gmv_diario_mes pra
+    sempre depois da primeira virada de mês (ficou congelado em 2026-08-01 por
+    mais de 7 semanas, sem nenhum erro visível — o workflow continuava "rodando
+    com sucesso" todo dia).
+
+    Esta versão nunca mais trava: descobre exatamente quais dias estão faltando
+    entre o último dia registrado (exclusive) e ultimo_dia_disponivel (o "ontem"
+    do fuso de Canoinhas/Três Barras), e busca cada um INDIVIDUALMENTE, direto do
+    report/208 com o filtro de Data isolado num único dia — mesma técnica já
+    validada (bate centavo a centavo) usada pro comparativo_mes_anterior em
+    scrape_dia_datamuch.py. Auto-recuperável: se ficar dias sem rodar por
+    qualquer motivo, a próxima execução preenche todos de uma vez, sem depender
+    de nenhuma soma acumulada."""
     if not gmv_diario_atual:
         return gmv_diario_atual
 
-    soma_atual = sum(d["gmv"] for d in gmv_diario_atual)
-    delta = round(novo_contexto["gmv_realizado_mes"] - soma_atual, 2)
-    if delta <= 0:
-        return gmv_diario_atual  # nada novo pra adicionar (ou até diminuiu — não mexe)
+    gmv_diario_atual = list(gmv_diario_atual)
+    datas_existentes = {d["data"] for d in gmv_diario_atual}
+    ultimo_dia_registrado = datetime.strptime(gmv_diario_atual[-1]["data"], "%Y-%m-%d").date()
 
-    ultimo_dia = datetime.strptime(gmv_diario_atual[-1]["data"], "%Y-%m-%d")
-    novo_dia = ultimo_dia + timedelta(days=1)
+    dia_cursor = ultimo_dia_registrado + timedelta(days=1)
+    while dia_cursor <= ultimo_dia_disponivel:
+        data_str = dia_cursor.strftime("%Y-%m-%d")
+        if data_str not in datas_existentes:
+            print(f"[gmv_diario_mes] buscando dia faltante {data_str} via filtro de dia único...")
+            frame = obter_frame_dia_unico(page)
+            selecionar_dia_unico_sem_filtro(frame, dia_cursor)
+            gmv_dia, meta_dia = ler_gmv_meta_dia_unico(frame)
+            gmv_diario_atual.append({"data": data_str, "gmv": gmv_dia, "meta": meta_dia})
+            datas_existentes.add(data_str)
+            print(f"[gmv_diario_mes] {data_str}: gmv={gmv_dia} meta={meta_dia}")
+        dia_cursor += timedelta(days=1)
 
-    ano, mes = novo_dia.year, novo_dia.month
-    dias_no_mes = (datetime(ano + (mes == 12), (mes % 12) + 1, 1) - timedelta(days=1)).day
-    meta_diaria_aprox = round(novo_contexto["meta_mes"] / dias_no_mes)
-
-    gmv_diario_atual = [d for d in gmv_diario_atual if not d.get("parcial")]
-    gmv_diario_atual.append({
-        "data": novo_dia.strftime("%Y-%m-%d"),
-        "gmv": delta,
-        "meta": meta_diaria_aprox,
-    })
+    gmv_diario_atual.sort(key=lambda d: d["data"])
     return gmv_diario_atual
 
 
@@ -412,7 +425,8 @@ def main():
 
             print(f"Novidade encontrada no Data Much! Última atualização lá: {data_datamuch}")
             novo_contexto = coletar_contexto(frame)
-            gmv_diario_novo = atualizar_gmv_diario(historico_atual.get("gmv_diario_mes", []), novo_contexto)
+            ontem = (datetime.now(BR_TZ) - timedelta(days=1)).date()
+            gmv_diario_novo = preencher_dias_faltantes_gmv_diario(page, historico_atual.get("gmv_diario_mes", []), ontem)
             atualizar_arquivos(novo_contexto, gmv_diario_novo, data_datamuch, novo_dia_detectado=True)
             escrever_output("mudou", "true")
 
