@@ -62,6 +62,11 @@ HISTORICO_JSON_PATH = REPO_ROOT / "historico_vendas.json"
 BR_TZ = timezone(timedelta(hours=-3))
 NAV_TIMEOUT_MS = 45000
 
+# Teto generoso pra trava de sanidade de ler_gmv_meta_dia_unico: bem acima
+# do maior dia real ja observado (~R$23mil), mas bem abaixo dos valores
+# corrompidos vistos em dias do mes corrente (R$464mil-762mil).
+TETO_SANIDADE = 100000
+
 
 def escrever_output(nome: str, valor: str):
     caminho = os.environ.get("GITHUB_OUTPUT")
@@ -138,7 +143,18 @@ def selecionar_dia_unico_sem_filtro(frame, dia):
 def ler_gmv_meta_dia_unico(frame):
     """Le os cards GMV (Realizado) e Meta do report/208 ja filtrado pra um unico
     dia. Retorna (gmv, meta). Mesma funcao ja usada e validada em
-    scrape_dia_datamuch.py."""
+    scrape_dia_datamuch.py.
+
+    TRAVA DE SANIDADE (adicionada em 22/09/2026): descobrimos que pra datas
+    dentro do MES CORRENTE (ainda em andamento), o filtro de dia unico as
+    vezes retorna valores muito maiores que um dia real (parece cair pra
+    algum tipo de acumulado em vez do dia isolado - causa raiz exata ainda
+    nao identificada). Em vez de aceitar cegamente, rejeita valores acima de
+    um teto bem folgado - bem maior que qualquer dia real ja visto, mas bem
+    menor que os valores corrompidos observados (R$464mil-762mil). Se
+    acontecer, levanta erro (falha alta, sem gravar nada errado) em vez de
+    corromper gmv_diario_mes silenciosamente.
+    (teto atual: R$ 100,000)"""
     corpo = frame.locator("body")
     limite = time.monotonic() + NAV_TIMEOUT_MS / 1000
     while True:
@@ -146,7 +162,17 @@ def ler_gmv_meta_dia_unico(frame):
         m_gmv = re.search(r"\bGMV\b\s*\n?\s*R\$\s?([\d.,]+)\s*\n?\s*Realizado", texto)
         m_meta = re.search(r"\bMeta\b\s*\n?\s*R\$\s?([\d.,]+)\s*\n?\s*Meta\b", texto)
         if m_gmv and m_meta:
-            return round(parse_valor_brl(m_gmv.group(1)), 2), round(parse_valor_brl(m_meta.group(1)), 2)
+            gmv_dia = round(parse_valor_brl(m_gmv.group(1)), 2)
+            meta_dia = round(parse_valor_brl(m_meta.group(1)), 2)
+            if gmv_dia > TETO_SANIDADE or meta_dia > TETO_SANIDADE:
+                raise RuntimeError(
+                    f"Valor de dia unico implausivel (gmv={gmv_dia} meta={meta_dia}, "
+                    f"teto={TETO_SANIDADE}) - provavelmente o filtro de dia unico nao "
+                    f"isolou corretamente esse dia (bug conhecido pra datas do mes "
+                    f"corrente, causa raiz ainda em investigacao). Abortando pra nao "
+                    f"gravar dado errado. Texto: {texto[:1500]!r}"
+                )
+            return gmv_dia, meta_dia
         if time.monotonic() >= limite:
             raise RuntimeError(f"Nao achei os cards GMV/Meta (dia unico). Texto: {texto[:1500]!r}")
         _esperar(frame, 500)
