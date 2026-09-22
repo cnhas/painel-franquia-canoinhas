@@ -143,12 +143,8 @@ def ler_gmv_meta_dia_unico(frame):
     limite = time.monotonic() + NAV_TIMEOUT_MS / 1000
     while True:
         texto = corpo.inner_text()
-        m_gmv = re.search(r"GMV\s*
-?\s*R\$\s?([\d.,]+)\s*
-?\s*Realizado", texto)
-        m_meta = re.search(r"Meta\s*
-?\s*R\$\s?([\d.,]+)\s*
-?\s*Meta", texto)
+        m_gmv = re.search(r"\bGMV\b\s*\n?\s*R\$\s?([\d.,]+)\s*\n?\s*Realizado", texto)
+        m_meta = re.search(r"\bMeta\b\s*\n?\s*R\$\s?([\d.,]+)\s*\n?\s*Meta\b", texto)
         if m_gmv and m_meta:
             return round(parse_valor_brl(m_gmv.group(1)), 2), round(parse_valor_brl(m_meta.group(1)), 2)
         if time.monotonic() >= limite:
@@ -480,10 +476,6 @@ def main():
 
             if ja_conhecida:
                 print(f"Sem novidade no Data Much (última atualização lá: {data_datamuch}).")
-                # Mesmo sem mudança de dados, registra que checamos — só localmente nos 2
-                # arquivos (não vale a pena commitar/deployar só por isso; o workflow não
-                # roda os passos de deploy/commit quando mudou=false, então essa escrita
-                # fica só na cópia local do runner, descartada no final do job).
                 status = historico_atual.get("data_much_status", {})
                 status["verificado_em"] = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
                 status_json = json.dumps(status, ensure_ascii=False, indent=2)
