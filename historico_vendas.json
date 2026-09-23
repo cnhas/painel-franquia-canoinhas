@@ -7381,6 +7381,203 @@
       "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
       "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
     ]
+  },
+  {
+    "data": "2026-09-22",
+    "pedidos_cupom": 75,
+    "gmv_cupom": 4606.3,
+    "desconto_total": 412.73,
+    "ticket_medio_cupom": 61.42,
+    "gmv_por_cupom": 11.16,
+    "lojas_unicas_cupom": 39,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 65
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 53
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 45
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 45
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 54
+      },
+      {
+        "categoria": "Combão com Desconto",
+        "qtd": 30
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 40
+      },
+      {
+        "categoria": "Promo Turbinada",
+        "qtd": 27
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "BURGUER",
+        "pedidos": 5
+      },
+      {
+        "codigo": "MUCH",
+        "pedidos": 2
+      },
+      {
+        "codigo": "MUCH20",
+        "pedidos": 2
+      },
+      {
+        "codigo": "PEDEDM",
+        "pedidos": 23
+      },
+      {
+        "codigo": "PRIMEIROPEDIDO",
+        "pedidos": 1
+      },
+      {
+        "codigo": "REPITA3VEZES",
+        "pedidos": 38
+      },
+      {
+        "codigo": "VAIDEPIX5",
+        "pedidos": 1
+      },
+      {
+        "codigo": "VCDEVOLTA",
+        "pedidos": 1
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 9825,
+      "subsidio_dm": 3525.0,
+      "subsidio_franquia": 16691.0,
+      "subsidio_loja": 98059.0,
+      "gmv_produtos": 297847.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 54819.67,
+        "pedidos": 851
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 34789.75,
+        "pedidos": 519
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 32185.0,
+        "pedidos": 331
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 28220.9,
+        "pedidos": 261
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 22015.09,
+        "pedidos": 328
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 21349.92,
+        "pedidos": 312
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 18579.38,
+        "pedidos": 252
+      },
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 18303.7,
+        "pedidos": 227
+      },
+      {
+        "nome": "Garajão do Dog - Centro",
+        "gmv": 18211.29,
+        "pedidos": 260
+      },
+      {
+        "nome": "Big X-Costela Pioneiro Desde 2016",
+        "gmv": 17068.31,
+        "pedidos": 223
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 54819.67,
+        "pedidos": 851
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 34789.75,
+        "pedidos": 519
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 16932.77,
+        "pedidos": 367
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 32185.0,
+        "pedidos": 331
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 22015.09,
+        "pedidos": 328
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 21349.92,
+        "pedidos": 312
+      },
+      {
+        "nome": "Chef BIONDI",
+        "gmv": 16202.04,
+        "pedidos": 272
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 28220.9,
+        "pedidos": 261
+      },
+      {
+        "nome": "Restaurante 10",
+        "gmv": 9292.6,
+        "pedidos": 261
+      },
+      {
+        "nome": "Garajão do Dog - Centro",
+        "gmv": 18211.29,
+        "pedidos": 260
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
+      "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
+    ]
   }
 ],
   "investimentos": {
