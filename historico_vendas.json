@@ -8137,6 +8137,191 @@
       "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
       "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
     ]
+  },
+  {
+    "data": "2026-11-02",
+    "pedidos_cupom": 92,
+    "gmv_cupom": 7074.8,
+    "desconto_total": 748.79,
+    "ticket_medio_cupom": 76.9,
+    "gmv_por_cupom": 9.45,
+    "lojas_unicas_cupom": 32,
+    "cupons_categoria": [
+      {
+        "categoria": "Bebidas",
+        "qtd": 79
+      },
+      {
+        "categoria": "Bom e Barato",
+        "qtd": 64
+      },
+      {
+        "categoria": "Combos Coca-Cola",
+        "qtd": 72
+      },
+      {
+        "categoria": "Mais vendidos no app",
+        "qtd": 60
+      },
+      {
+        "categoria": "Porções",
+        "qtd": 45
+      },
+      {
+        "categoria": "Ofertas",
+        "qtd": 47
+      },
+      {
+        "categoria": "Promo Turbinada",
+        "qtd": 39
+      },
+      {
+        "categoria": "Seleção de Ofertas",
+        "qtd": 37
+      }
+    ],
+    "cupons_uso": [
+      {
+        "codigo": "#MUCH20",
+        "pedidos": 3
+      },
+      {
+        "codigo": "BARATINHO",
+        "pedidos": 4
+      },
+      {
+        "codigo": "BORAPEDIR",
+        "pedidos": 62
+      },
+      {
+        "codigo": "MUCH",
+        "pedidos": 1
+      },
+      {
+        "codigo": "PRIMEIROPEDIDO",
+        "pedidos": 3
+      },
+      {
+        "codigo": "REPITA3VEZES",
+        "pedidos": 19
+      }
+    ],
+    "ofertas_de_por": {
+      "itens_vendidos": 220,
+      "subsidio_dm": 58.0,
+      "subsidio_franquia": 313.75,
+      "subsidio_loja": 1344.0,
+      "gmv_produtos": 7575.0,
+      "destaques": []
+    },
+    "top_lojas_gmv": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 108180.63,
+        "pedidos": 1721
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 59133.0,
+        "pedidos": 598
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 56721.29,
+        "pedidos": 846
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 47558.55,
+        "pedidos": 434
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 44207.86,
+        "pedidos": 653
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 34800.85,
+        "pedidos": 473
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 34799.79,
+        "pedidos": 459
+      },
+      {
+        "nome": "Steak House Petry e Pizzaria",
+        "gmv": 30522.61,
+        "pedidos": 232
+      },
+      {
+        "nome": "Garajão do Dog - Centro",
+        "gmv": 30259.33,
+        "pedidos": 397
+      },
+      {
+        "nome": "Daj Cachaçaria",
+        "gmv": 29531.5,
+        "pedidos": 370
+      }
+    ],
+    "top_lojas_pedidos": [
+      {
+        "nome": "Top'z Burger",
+        "gmv": 108180.63,
+        "pedidos": 1721
+      },
+      {
+        "nome": "Ideal Hamburgueria",
+        "gmv": 56721.29,
+        "pedidos": 846
+      },
+      {
+        "nome": "Fredie's Burguer",
+        "gmv": 44207.86,
+        "pedidos": 653
+      },
+      {
+        "nome": "Big Pizza em Metro",
+        "gmv": 59133.0,
+        "pedidos": 598
+      },
+      {
+        "nome": "Bom Apetite",
+        "gmv": 28022.69,
+        "pedidos": 596
+      },
+      {
+        "nome": "Sushi Yume",
+        "gmv": 34800.85,
+        "pedidos": 473
+      },
+      {
+        "nome": "Garajão do Dog - Jardim Esperança",
+        "gmv": 34799.79,
+        "pedidos": 459
+      },
+      {
+        "nome": "Restaurante 10",
+        "gmv": 15250.6,
+        "pedidos": 442
+      },
+      {
+        "nome": "Pizzaria Portal",
+        "gmv": 47558.55,
+        "pedidos": 434
+      },
+      {
+        "nome": "Mietta Café",
+        "gmv": 26066.9,
+        "pedidos": 422
+      }
+    ],
+    "pendencias": [
+      "Dados do Painel (pedidos totais/cancelados/entrega/retirada) ainda não incluídos nesta atualização automática — só os dados do Data Much.",
+      "Comparativo com o mesmo dia do mês anterior coletado, mas o GMV oficial de hoje ainda não estava disponível pra calcular a variação % com segurança — fica pendente pra próxima rodada."
+    ]
   }
 ],
   "investimentos": {
