@@ -8880,24 +8880,24 @@
   }
 ],
   "investimentos": {
-  "periodo": "01/11/2026 a 05/11/2026",
-  "atualizado_em": "2026-11-06",
-  "verificacao_dados_recentes": "Atualizado automaticamente em 06/11/2026 20:44 pela rotina diária. Cobre 01/11/2026 a 05/11/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
+  "periodo": "01/11/2026 a 06/11/2026",
+  "atualizado_em": "2026-11-07",
+  "verificacao_dados_recentes": "Atualizado automaticamente em 07/11/2026 19:49 pela rotina diária. Cobre 01/11/2026 a 06/11/2026. ATENÇÃO: nem todos os componentes foram recoletados nesta rodada — ver pendências.",
   "componentes": [
     {
       "nome": "Ofertas De/Por — subsídio franquia",
       "valor": 1118.0,
-      "obs": "Mês corrente (01/11/2026 a 05/11/2026)"
+      "obs": "Mês corrente (01/11/2026 a 06/11/2026)"
     },
     {
       "nome": "Cupom — subsídio franquia (direto)",
-      "valor": 213.8,
-      "obs": "01/10/2026 a 31/10/2026 · filtro Subsídio = Franquia"
+      "valor": 15.0,
+      "obs": "01/11/2026 a 06/11/2026 · filtro Subsídio = Franquia"
     },
     {
       "nome": "Cupom — 50% do subsídio compartilhado Franqueadora + Franquia",
-      "valor": 70.92,
-      "obs": "50% de R$ 141.84 · 01/11/2026 a 05/11/2026"
+      "valor": 95.8,
+      "obs": "50% de R$ 191.60 · 01/11/2026 a 06/11/2026"
     },
     {
       "nome": "Entrega promocional — subsídio franquia",
@@ -8905,9 +8905,8 @@
       "obs": "Revertido em 21/07/2026: um valor de R$92,80 tinha sido gravado por engano (era o maior valor de 1 loja só, não a soma de todas as lojas). Até a automação somar a coluna inteira, fica em 0,00 com pendência explícita — NÃO necessariamente o valor real (pode ser > 0)."
     }
   ],
-  "total_confirmado": 1402.72,
+  "total_confirmado": 1228.8,
   "pendencias": [
-    "\"Cupom — subsídio franquia (direto)\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 213.8), pode estar desatualizado.",
     "\"Entrega promocional — subsídio franquia\" não pôde ser recoletado automaticamente nesta rodada — mantido o último valor conhecido (R$ 0.0), pode estar desatualizado.",
     "Por loja: só 'entrega promocional' está detalhada por loja até agora — De/Por e Cupom aparecem só no total do período.",
     "Por campanha: ainda não há uma quebra de investimento por campanha específica — só por tipo de subsídio (De/Por, Cupom, Entrega)."
